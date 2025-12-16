@@ -7,7 +7,7 @@ from app.core.database import Base
 
 
 class Ciyu(Base):
-    """词语模型"""
+    """词语模型，包含词语的详细信息"""
     __tablename__ = "hanyuguoxue_ciyu"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)

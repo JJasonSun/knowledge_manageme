@@ -1,5 +1,5 @@
 """
-用户模型
+初始用户模型，可能需要简化点
 """
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
 from sqlalchemy.sql import func
@@ -7,7 +7,7 @@ from app.core.database import Base
 
 
 class User(Base):
-    """用户模型"""
+    """用户模型，包含基本的用户信息和角色"""
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)

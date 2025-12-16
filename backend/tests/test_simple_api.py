@@ -1,5 +1,7 @@
 """
-简单的API测试
+简单的API测试脚本
+利用SQLAlchemy执行基本查询以验证数据库连接有效性
+导入自定义的模型以确保它们正确映射到数据库表
 """
 import sys
 import os

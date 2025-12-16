@@ -1,5 +1,6 @@
 """
 成语模型
+定义了一个成语类，包含成语的详细信息
 """
 from sqlalchemy import Column, Integer, String, Text, JSON, DateTime, Enum
 from sqlalchemy.sql import func
@@ -7,7 +8,7 @@ from app.core.database import Base
 
 
 class Chengyu(Base):
-    """成语模型"""
+    """成语模型，包含成语的详细信息"""
     __tablename__ = "hanyuguoxue_chengyu"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)

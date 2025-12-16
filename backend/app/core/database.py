@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from .config import settings
 
-# 创建数据库引擎
+# 创建数据库引擎，后续可以使用该引擎与数据库交互，sessionmaker(bind=engine)用于创建数据库会话
 engine = create_engine(
     settings.DATABASE_URL, # 数据库连接URL
     echo=settings.DEBUG,  # 在调试模式下打印SQL语句
@@ -21,6 +21,7 @@ Base = declarative_base()
 def get_db():
     """
     获取数据库会话
+    可以在FastAPI的依赖注入中使用
     """
     db = SessionLocal()
     try:

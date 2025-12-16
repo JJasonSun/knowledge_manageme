@@ -7,7 +7,7 @@ from app.core.database import Base
 
 
 class Hanzi(Base):
-    """汉字模型"""
+    """汉字模型，包含汉字的详细信息"""
     __tablename__ = "hanyuguoxue_hanzi"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
