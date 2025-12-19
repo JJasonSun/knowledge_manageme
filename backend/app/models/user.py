@@ -7,7 +7,7 @@ from app.core.database import Base
 
 class User(Base):
     """简化用户模型，只包含基本信息"""
-    __tablename__ = "users"
+    __tablename__ = "users_knma"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     username = Column(String(50), unique=True, nullable=False, index=True, comment="用户名")

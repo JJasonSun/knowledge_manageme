@@ -16,8 +16,8 @@ class ChengyuBase(BaseModel):
     source: Optional[str] = None
     usage: Optional[str] = None
     example: Optional[str] = None
-    synonyms: Optional[Dict[str, Any]] = None
-    antonyms: Optional[Dict[str, Any]] = None
+    synonyms: Optional[List[str]] = None
+    antonyms: Optional[List[str]] = None
     translation: Optional[str] = None
 
 
@@ -36,8 +36,8 @@ class ChengyuUpdate(BaseModel):
     source: Optional[str] = None
     usage: Optional[str] = None
     example: Optional[str] = None
-    synonyms: Optional[Dict[str, Any]] = None
-    antonyms: Optional[Dict[str, Any]] = None
+    synonyms: Optional[List[str]] = None
+    antonyms: Optional[List[str]] = None
     translation: Optional[str] = None
 
 

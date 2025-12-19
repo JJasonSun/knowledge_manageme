@@ -14,8 +14,8 @@ class CiyuBase(BaseModel):
     part_of_speech: Optional[str] = None
     is_common: Optional[bool] = None
     definition: Optional[str] = None
-    synonyms: Optional[Dict[str, Any]] = None
-    antonyms: Optional[Dict[str, Any]] = None
+    synonyms: Optional[List[str]] = None
+    antonyms: Optional[List[str]] = None
 
 
 class CiyuCreate(CiyuBase):
@@ -31,8 +31,8 @@ class CiyuUpdate(BaseModel):
     part_of_speech: Optional[str] = None
     is_common: Optional[bool] = None
     definition: Optional[str] = None
-    synonyms: Optional[Dict[str, Any]] = None
-    antonyms: Optional[Dict[str, Any]] = None
+    synonyms: Optional[List[str]] = None
+    antonyms: Optional[List[str]] = None
 
 
 class CiyuResponse(CiyuBase):
