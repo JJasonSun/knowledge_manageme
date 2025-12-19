@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List
+import os
 
 
 class Settings(BaseSettings):
@@ -25,7 +26,8 @@ class Settings(BaseSettings):
     ]
     
     class Config:
-        env_file = ".env"
+        # 获取backend目录的绝对路径，然后指向.env文件
+        env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env")
 
 
 settings = Settings()
