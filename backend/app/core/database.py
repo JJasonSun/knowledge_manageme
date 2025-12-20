@@ -42,3 +42,39 @@ def test_connection():
     except Exception as e:
         print(f"数据库连接失败: {e}")
         return False
+
+
+def ensure_owner_columns():
+    """确保成语与词语表包含 created_by 字段"""
+    tables = [
+        ("hanyuguoxue_chengyu", "created_by", "VARCHAR(128)"),
+        ("hanyuguoxue_ciyu", "created_by", "VARCHAR(128)")
+    ]
+
+    try:
+        with engine.begin() as connection:
+            for table_name, column_name, definition in tables:
+                exists_query = text(
+                    """
+                    SELECT COUNT(*) FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = :table_name
+                      AND COLUMN_NAME = :column_name
+                    """
+                )
+                exists = connection.execute(
+                    exists_query,
+                    {"table_name": table_name, "column_name": column_name}
+                ).scalar()
+
+                if exists:
+                    continue
+
+                connection.execute(
+                    text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {definition}")
+                )
+
+        return True
+    except Exception as e:
+        print(f"创建 created_by 列失败: {e}")
+        return False

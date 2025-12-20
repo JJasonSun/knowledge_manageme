@@ -20,6 +20,7 @@ class Ciyu(Base):
     definition = Column(Text, nullable=True, comment="定义")
     synonyms = Column(JSON, nullable=True, comment="同义词")
     antonyms = Column(JSON, nullable=True, comment="反义词")
+    created_by = Column(String(128), nullable=True, index=True, comment="创建者用户名")
     error = Column(Text, nullable=True, comment="错误信息")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), comment="更新时间")

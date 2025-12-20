@@ -48,6 +48,17 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Docker
+.dockerignore
+docker-compose*.yml
+Dockerfile*
+nginx/
+.docker/
+
+# Container logs
+*docker.log
+docker_logs/
 logs/
 
 # Database

@@ -2,7 +2,7 @@
 成语模型
 定义了一个成语类，包含成语的详细信息
 """
-from sqlalchemy import Column, Integer, String, Text, JSON, DateTime, Enum
+from sqlalchemy import Column, Integer, String, Text, JSON, DateTime
 from sqlalchemy.sql import func
 from app.core.database import Base
 
@@ -24,6 +24,7 @@ class Chengyu(Base):
     synonyms = Column(JSON, nullable=True, comment="同义词")
     antonyms = Column(JSON, nullable=True, comment="反义词")
     translation = Column(Text, nullable=True, comment="翻译")
+    created_by = Column(String(128), nullable=True, index=True, comment="创建者用户名")
     error = Column(Text, nullable=True, comment="错误信息")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), comment="更新时间")
