@@ -10,8 +10,16 @@
           type="text" 
           class="search-input"
           placeholder="搜索成语..."
-          @input="handleSearch"
+          @keyup.enter="handleSearch"
         >
+        <button 
+          class="btn btn-primary search-button" 
+          type="button"
+          @click="handleSearch"
+          :disabled="loading"
+        >
+          搜索
+        </button>
       </div>
       
       <table class="table" v-if="!loading && chengyuList.length > 0">
@@ -103,8 +111,9 @@ export default {
           size: pageSize.value
         }
         
-        if (searchQuery.value) {
-          params.search = searchQuery.value
+        const searchValue = searchQuery.value.trim()
+        if (searchValue) {
+          params.search = searchValue
         }
         
         const response = await request.get('/v1/chengyu', { params })

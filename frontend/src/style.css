@@ -142,6 +142,9 @@ body {
 
 .search-box {
   margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .search-input {
@@ -149,6 +152,10 @@ body {
   padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+.search-button {
+  padding: 8px 16px;
 }
 
 .pagination {
