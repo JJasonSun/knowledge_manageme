@@ -179,10 +179,10 @@ async def get_chengyu_list(
         if search:
             query = query.filter(Chengyu.chengyu.like(f"%{search}%"))
         
-        # 分页
+        # 分页 - 使用降序排序显示最新内容
         total = query.count()
         offset = (page - 1) * size
-        chengyu_list = query.order_by(Chengyu.created_at.desc()).offset(offset).limit(size).all()
+        chengyu_list = query.order_by(Chengyu.id.desc()).offset(offset).limit(size).all()
         
         # 添加权限标记
         items = []
@@ -350,10 +350,10 @@ async def get_ciyu_list(
         if search:
             query = query.filter(Ciyu.word.like(f"%{search}%"))
         
-        # 分页
+        # 分页 - 使用降序排序显示最新内容
         total = query.count()
         offset = (page - 1) * size
-        ciyu_list = query.order_by(Ciyu.created_at.desc()).offset(offset).limit(size).all()
+        ciyu_list = query.order_by(Ciyu.id.desc()).offset(offset).limit(size).all()
         
         # 添加权限标记
         items = []

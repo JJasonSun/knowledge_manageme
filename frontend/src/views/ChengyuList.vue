@@ -58,58 +58,82 @@
       <div v-if="!loading && chengyuList.length === 0" class="empty-text">暂无数据</div>
       
       <div class="pagination" v-if="totalPages > 1">
+        <button class="btn" @click="goToPage(1)" :disabled="currentPage <= 1">首页</button>
         <button class="btn" @click="goToPage(currentPage - 1)" :disabled="currentPage <= 1">上一页</button>
-        <span class="page-info">第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
+        
+        <div class="page-jump">
+          <span>第</span>
+          <input 
+            v-model.number="jumpPage" 
+            type="number" 
+            :min="1" 
+            :max="totalPages"
+            class="page-input"
+            @keyup.enter="handleJumpPage"
+          >
+          <span>页，共 {{ totalPages }} 页</span>
+          <button class="btn btn-small" @click="handleJumpPage">跳转</button>
+        </div>
+        
         <button class="btn" @click="goToPage(currentPage + 1)" :disabled="currentPage >= totalPages">下一页</button>
+        <button class="btn" @click="goToPage(totalPages)" :disabled="currentPage >= totalPages">末页</button>
       </div>
     </div>
 
     <!-- 创建/编辑弹窗 -->
     <div v-if="showCreateModal || showEditModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal">
+      <div class="modal modal-wide">
         <h3>{{ showEditModal ? '编辑成语' : '添加成语' }}</h3>
         <form @submit.prevent="showEditModal ? handleUpdate() : handleCreate()">
-          <div class="form-group">
-            <label class="form-label">成语 *</label>
-            <input v-model="formData.chengyu" type="text" class="form-input" required :disabled="showEditModal">
+          <div class="form-grid">
+            <div class="form-column">
+              <div class="form-group">
+                <label class="form-label">成语 *</label>
+                <input v-model="formData.chengyu" type="text" class="form-input" required :disabled="showEditModal">
+              </div>
+              <div class="form-group">
+                <label class="form-label">拼音</label>
+                <input v-model="formData.pinyin" type="text" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">注音</label>
+                <input v-model="formData.zhuyin" type="text" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">情感色彩</label>
+                <select v-model="formData.emotion" class="form-input">
+                  <option value="">请选择</option>
+                  <option value="褒义">褒义</option>
+                  <option value="贬义">贬义</option>
+                  <option value="中性">中性</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">翻译</label>
+                <textarea v-model="formData.translation" class="form-input" rows="2"></textarea>
+              </div>
+            </div>
+            
+            <div class="form-column">
+              <div class="form-group">
+                <label class="form-label">解释</label>
+                <textarea v-model="formData.explanation" class="form-input" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">来源</label>
+                <textarea v-model="formData.source" class="form-input" rows="2"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">用法</label>
+                <textarea v-model="formData.usage" class="form-input" rows="2"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">例句</label>
+                <textarea v-model="formData.example" class="form-input" rows="2"></textarea>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">拼音 *</label>
-            <input v-model="formData.pinyin" type="text" class="form-input" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">注音</label>
-            <input v-model="formData.zhuyin" type="text" class="form-input">
-          </div>
-          <div class="form-group">
-            <label class="form-label">情感色彩</label>
-            <select v-model="formData.emotion" class="form-input">
-              <option value="">请选择</option>
-              <option value="褒义">褒义</option>
-              <option value="贬义">贬义</option>
-              <option value="中性">中性</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">解释 *</label>
-            <textarea v-model="formData.explanation" class="form-input" rows="3" required></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">来源</label>
-            <textarea v-model="formData.source" class="form-input" rows="2"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">用法</label>
-            <textarea v-model="formData.usage" class="form-input" rows="2"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">例句</label>
-            <textarea v-model="formData.example" class="form-input" rows="2"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">翻译</label>
-            <textarea v-model="formData.translation" class="form-input" rows="2"></textarea>
-          </div>
+          
           <div class="modal-actions">
             <button type="button" class="btn" @click="closeModal">取消</button>
             <button type="submit" class="btn btn-primary" :disabled="submitting">
@@ -141,6 +165,7 @@ export default {
     const currentPage = ref(1)
     const pageSize = ref(20)
     const total = ref(0)
+    const jumpPage = ref(1)
     
     const showCreateModal = ref(false)
     const showEditModal = ref(false)
@@ -198,8 +223,20 @@ export default {
     })
     
     const goToPage = (page) => {
-      currentPage.value = page
-      fetchChengyu()
+      if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page
+        jumpPage.value = page
+        fetchChengyu()
+      }
+    }
+
+    const handleJumpPage = () => {
+      if (jumpPage.value >= 1 && jumpPage.value <= totalPages.value) {
+        goToPage(jumpPage.value)
+      } else {
+        alert(`请输入1到${totalPages.value}之间的页码`)
+        jumpPage.value = currentPage.value
+      }
     }
 
     const resetForm = () => {
@@ -292,9 +329,9 @@ export default {
     })
     
     return {
-      authStore, chengyuList, loading, searchQuery, currentPage, totalPages,
+      authStore, chengyuList, loading, searchQuery, currentPage, totalPages, jumpPage,
       showCreateModal, showEditModal, submitting, formData,
-      handleSearch, goToPage, openEditModal, closeModal,
+      handleSearch, goToPage, handleJumpPage, openEditModal, closeModal,
       handleCreate, handleUpdate, handleDelete, getOwnerText, getOwnerClass
     }
   }
@@ -360,6 +397,24 @@ export default {
   width: 500px;
   max-width: 90%;
 }
+
+.modal-wide {
+  width: 800px;
+  max-width: 95%;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
 .modal h3 { margin-bottom: 20px; }
 .modal-actions {
   display: flex;
@@ -378,5 +433,29 @@ export default {
   background-color: #f3e5f5;
   color: #7b1fa2;
   border-color: #ce93d8;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.page-jump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 15px;
+}
+
+.page-input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
 }
 </style>
