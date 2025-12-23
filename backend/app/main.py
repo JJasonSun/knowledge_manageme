@@ -45,13 +45,41 @@ app.add_middleware(
 security = HTTPBearer()
 
 
-def ensure_owner_or_admin(resource, current_user):
+def is_public_resource(resource):
+    """判断是否为公共资源（created_by 为空、'system' 或 'admin'）"""
     owner = getattr(resource, "created_by", None)
+    return owner is None or owner == "" or owner == "system" or owner == "admin"
+
+
+def can_view_resource(resource, current_user):
+    """检查用户是否可以查看资源"""
+    # 管理员可以查看所有
     if current_user.role == "admin":
-        return
-    if owner and owner == current_user.username:
-        return
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="权限不足")
+        return True
+    # 公共资源（包括管理员创建的）所有人可以查看
+    if is_public_resource(resource):
+        return True
+    # 老师可以查看自己创建的
+    owner = getattr(resource, "created_by", None)
+    return owner == current_user.username
+
+
+def can_modify_resource(resource, current_user):
+    """检查用户是否可以修改资源（编辑/删除）"""
+    # 管理员可以修改所有
+    if current_user.role == "admin":
+        return True
+    # 老师只能修改自己创建的（不能修改公共资源，包括管理员创建的）
+    if is_public_resource(resource):
+        return False
+    owner = getattr(resource, "created_by", None)
+    return owner == current_user.username
+
+
+def ensure_owner_or_admin(resource, current_user):
+    """确保用户有权限修改资源"""
+    if not can_modify_resource(resource, current_user):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="权限不足，只能修改自己创建的资源")
 
 # 根路径
 @app.get("/")
@@ -63,6 +91,19 @@ async def root():
         "docs": "/docs",
         "status": "running"
     }
+
+@app.get("/debug/check-data")
+async def check_existing_data(db: Session = Depends(get_db)):
+    """检查现有数据 - 无需认证"""
+    try:
+        chengyu_count = db.query(Chengyu).count()
+        ciyu_count = db.query(Ciyu).count()
+        return {
+            'chengyu_count': chengyu_count,
+            'ciyu_count': ciyu_count
+        }
+    except Exception as e:
+        return {'error': str(e)}
 
 # 健康检查
 @app.get("/health")
@@ -110,39 +151,75 @@ async def get_current_user_info(current_user = Depends(get_current_user)):
     )
 
 # 成语相关接口
-@app.get("/api/v1/chengyu", response_model=ChengyuListResponse)
+@app.get("/api/v1/chengyu")
 async def get_chengyu_list(
     page: int = 1,
     size: int = 20,
     search: Optional[str] = None,
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """获取成语列表"""
+    """获取成语列表（根据用户权限过滤）"""
     try:
         query = db.query(Chengyu)
         
-        # 搜索过滤
-        if search:
+        # 老师只能看到公共资源（包括管理员创建的）和自己创建的
+        if current_user.role == "teacher":
             query = query.filter(
                 or_(
-                    Chengyu.chengyu.like(f"%{search}%"),
-                    Chengyu.pinyin.like(f"%{search}%"),
-                    Chengyu.explanation.like(f"%{search}%")
+                    Chengyu.created_by == None,
+                    Chengyu.created_by == "",
+                    Chengyu.created_by == "system",
+                    Chengyu.created_by == "admin",
+                    Chengyu.created_by == current_user.username
                 )
             )
+        
+        # 搜索过滤 - 只根据成语内容进行匹配
+        if search:
+            query = query.filter(Chengyu.chengyu.like(f"%{search}%"))
         
         # 分页
         total = query.count()
         offset = (page - 1) * size
         chengyu_list = query.order_by(Chengyu.created_at.desc()).offset(offset).limit(size).all()
         
-        return ChengyuListResponse(
-            items=[ChengyuResponse.from_orm(chengyu) for chengyu in chengyu_list],
-            total=total,
-            page=page,
-            size=size,
-            pages=(total + size - 1) // size
-        )
+        # 添加权限标记
+        items = []
+        for chengyu in chengyu_list:
+            can_edit = can_modify_resource(chengyu, current_user)
+            can_delete = can_modify_resource(chengyu, current_user)
+            
+            # 直接构建字典，包含所有字段和权限信息
+            item_dict = {
+                'id': chengyu.id,
+                'chengyu': chengyu.chengyu,
+                'url': chengyu.url,
+                'pinyin': chengyu.pinyin,
+                'zhuyin': chengyu.zhuyin,
+                'emotion': chengyu.emotion,
+                'explanation': chengyu.explanation,
+                'source': chengyu.source,
+                'usage': chengyu.usage,
+                'example': chengyu.example,
+                'synonyms': chengyu.synonyms,
+                'antonyms': chengyu.antonyms,
+                'translation': chengyu.translation,
+                'created_by': chengyu.created_by,
+                'created_at': chengyu.created_at,
+                'updated_at': chengyu.updated_at,
+                'can_edit': can_edit,
+                'can_delete': can_delete
+            }
+            items.append(item_dict)
+        
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "size": size,
+            "pages": (total + size - 1) // size
+        }
     except Exception as e:
         logger.error(f"获取成语列表失败: {str(e)}")
         import traceback
@@ -245,44 +322,77 @@ async def delete_chengyu(
         raise HTTPException(status_code=500, detail="删除成语失败")
 
 # 词语相关接口
-@app.get("/api/v2/ciyu", response_model=CiyuListResponse)
+@app.get("/api/v1/ciyu")
 async def get_ciyu_list(
     page: int = 1,
     size: int = 20,
     search: Optional[str] = None,
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """获取词语列表"""
+    """获取词语列表（根据用户权限过滤）"""
     try:
         query = db.query(Ciyu)
         
-        # 搜索过滤
-        if search:
+        # 老师只能看到公共资源（包括管理员创建的）和自己创建的
+        if current_user.role == "teacher":
             query = query.filter(
                 or_(
-                    Ciyu.word.like(f"%{search}%"),
-                    Ciyu.pinyin.like(f"%{search}%"),
-                    Ciyu.definition.like(f"%{search}%")
+                    Ciyu.created_by == None,
+                    Ciyu.created_by == "",
+                    Ciyu.created_by == "system",
+                    Ciyu.created_by == "admin",
+                    Ciyu.created_by == current_user.username
                 )
             )
+        
+        # 搜索过滤 - 只根据词语内容进行匹配
+        if search:
+            query = query.filter(Ciyu.word.like(f"%{search}%"))
         
         # 分页
         total = query.count()
         offset = (page - 1) * size
         ciyu_list = query.order_by(Ciyu.created_at.desc()).offset(offset).limit(size).all()
         
-        return CiyuListResponse(
-            items=[CiyuResponse.from_orm(ciyu) for ciyu in ciyu_list],
-            total=total,
-            page=page,
-            size=size,
-            pages=(total + size - 1) // size
-        )
+        # 添加权限标记
+        items = []
+        for ciyu in ciyu_list:
+            can_edit = can_modify_resource(ciyu, current_user)
+            can_delete = can_modify_resource(ciyu, current_user)
+            
+            # 直接构建字典，包含所有字段和权限信息
+            item_dict = {
+                'id': ciyu.id,
+                'word': ciyu.word,
+                'url': ciyu.url,
+                'pinyin': ciyu.pinyin,
+                'zhuyin': ciyu.zhuyin,
+                'part_of_speech': ciyu.part_of_speech,
+                'is_common': ciyu.is_common,
+                'definition': ciyu.definition,
+                'synonyms': ciyu.synonyms,
+                'antonyms': ciyu.antonyms,
+                'created_by': ciyu.created_by,
+                'created_at': ciyu.created_at,
+                'updated_at': ciyu.updated_at,
+                'can_edit': can_edit,
+                'can_delete': can_delete
+            }
+            items.append(item_dict)
+        
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "size": size,
+            "pages": (total + size - 1) // size
+        }
     except Exception as e:
         logger.error(f"获取词语列表失败: {str(e)}")
         raise HTTPException(status_code=500, detail="获取词语列表失败")
 
-@app.get("/api/v2/ciyu/{ciyu_id}", response_model=CiyuResponse)
+@app.get("/api/v1/ciyu/{ciyu_id}", response_model=CiyuResponse)
 async def get_ciyu(ciyu_id: int, db: Session = Depends(get_db)):
     """获取单个词语详情"""
     ciyu = db.query(Ciyu).filter(Ciyu.id == ciyu_id).first()
@@ -290,7 +400,7 @@ async def get_ciyu(ciyu_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="词语不存在")
     return CiyuResponse.from_orm(ciyu)
 
-@app.post("/api/v2/ciyu", response_model=CiyuResponse)
+@app.post("/api/v1/ciyu", response_model=CiyuResponse)
 async def create_ciyu(
     ciyu_data: CiyuCreate,
     current_user = Depends(get_current_user),
@@ -313,7 +423,7 @@ async def create_ciyu(
         raise HTTPException(status_code=500, detail="创建词语失败")
 
 
-@app.put("/api/v2/ciyu/{ciyu_id}", response_model=CiyuResponse)
+@app.put("/api/v1/ciyu/{ciyu_id}", response_model=CiyuResponse)
 async def update_ciyu(
     ciyu_id: int,
     ciyu_data: CiyuUpdate,
@@ -343,7 +453,7 @@ async def update_ciyu(
         raise HTTPException(status_code=500, detail="更新词语失败")
 
 
-@app.delete("/api/v2/ciyu/{ciyu_id}")
+@app.delete("/api/v1/ciyu/{ciyu_id}")
 async def delete_ciyu(
     ciyu_id: int,
     current_user=Depends(get_current_user),
@@ -400,28 +510,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         reload=True
-    )
-
-
-@app.get("/health")
-async def health_check():
-    """
-    健康检查接口
-    """
-    db_status = "connected" if test_connection() else "disconnected"
-    
-    return {
-        "status": "healthy",
-        "database": db_status,
-        "version": settings.VERSION
-    }
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=settings.DEBUG
     )

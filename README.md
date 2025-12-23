@@ -36,16 +36,36 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
    ```bash
    cd backend
    ```
+
 2. 创建虚拟环境并安装依赖：
    ```bash
    uv venv
    uv sync
    ```
-3. 启动后端服务：
+
+3. 激活虚拟环境并启动后端服务：
    ```bash
+   # 方式一：使用 uv run（推荐）
    uv run uvicorn app.main:app --reload --port 8000
+   
+   # 方式二：激活虚拟环境后运行
+   # Windows:
+   .venv\Scripts\activate
+   uvicorn app.main:app --reload --port 8000
+   
+   # Linux/macOS:
+   source .venv/bin/activate
+   uvicorn app.main:app --reload --port 8000
    ```
-   *注意：首次运行会自动根据 `app/core/database.py` 中的逻辑初始化数据库表结构。*
+
+   **重要提示**：
+   - 确保在 `backend` 目录下运行命令
+   - 如果遇到 "program not found" 错误，请确保已正确安装 uv 并且在正确的目录下
+   - 首次运行会自动根据 `app/core/database.py` 中的逻辑初始化数据库表结构
+
+4. 验证后端启动成功：
+   - 访问 http://localhost:8000/docs 查看 API 文档
+   - 访问 http://localhost:8000/health 检查服务状态
 
 ### 3. 前端配置与启动
 
@@ -76,6 +96,41 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 - **资源管理**: 支持成语和词语的增删改查，包含拼音、释义、例句等详细字段。
 - **智能搜索**: 支持按名称、拼音或释义进行模糊搜索。
 - **响应式设计**: 前端采用 Vue 3 开发，提供流畅的用户交互体验。
+
+## 常见问题
+
+### 后端启动问题
+
+1. **错误**: `Failed to spawn: uvicorn` 或 `program not found`
+   - **解决方案**: 确保在 `backend` 目录下运行命令，并且已正确安装依赖
+   ```bash
+   cd backend
+   uv sync  # 重新同步依赖
+   uv run uvicorn app.main:app --reload --port 8000
+   ```
+
+2. **错误**: 数据库连接失败
+   - **解决方案**: 检查 `backend/.env` 文件中的数据库配置
+   - 确保 MySQL 服务正在运行
+
+3. **错误**: 端口被占用
+   - **解决方案**: 更换端口或停止占用端口的进程
+   ```bash
+   uv run uvicorn app.main:app --reload --port 8001  # 使用其他端口
+   ```
+
+### 前端启动问题
+
+1. **错误**: `npm install` 失败
+   - **解决方案**: 清除缓存后重新安装
+   ```bash
+   npm cache clean --force
+   npm install
+   ```
+
+2. **错误**: API 请求失败
+   - **解决方案**: 确保后端服务已启动并运行在正确端口
+   - 检查 `frontend/vite.config.js` 中的代理配置
 
 ## 测试账号
 

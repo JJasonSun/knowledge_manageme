@@ -3,7 +3,7 @@
     <div class="title">中文教育资源管理系统</div>
     
     <div class="nav-links">
-      <router-link to="/main" class="nav-link">首页</router-link>
+      <router-link to="/home" class="nav-link">首页</router-link>
       <router-link to="/chengyu" class="nav-link">成语管理</router-link>
       <router-link to="/ciyu" class="nav-link">词语管理</router-link>
     </div>

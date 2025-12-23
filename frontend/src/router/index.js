@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/auth'
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    redirect: '/home'
   },
   {
     path: '/login',
@@ -12,10 +12,14 @@ const routes = [
     component: () => import('../views/Login.vue')
   },
   {
-    path: '/main',
-    name: 'Main',
-    component: () => import('../views/Main.vue'),
+    path: '/home',
+    name: 'Home',
+    component: () => import('../views/Home.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/main',
+    redirect: '/home'
   },
   {
     path: '/chengyu',
@@ -42,7 +46,7 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else if (to.path === '/login' && authStore.isAuthenticated) {
-    next('/main')
+    next('/home')
   } else {
     next()
   }
