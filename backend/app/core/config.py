@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     # JWT配置
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     
     # 应用配置
     APP_NAME: str = "中文教育资源管理系统"

@@ -80,7 +80,7 @@
               <span class="result-type" :class="'type-' + item.type">
                 {{ item.type === 'chengyu' ? '成语' : '词语' }}
               </span>
-              <span v-if="item.can_delete" class="result-mine">我的</span>
+              <span v-if="canModifyItem(item)" class="result-mine">我的</span>
               <span v-else-if="item.created_by === 'admin'" class="result-admin">管理员</span>
               <span v-else-if="!item.created_by || item.created_by === 'system'" class="result-system">系统</span>
             </div>
@@ -157,9 +157,9 @@
             </div>
             
             <!-- 操作按钮 -->
-            <div class="result-actions" v-if="item.can_edit || item.can_delete">
-              <button v-if="item.can_edit" class="btn-small" @click="editItem(item)">编辑</button>
-              <button v-if="item.can_delete" class="btn-small btn-danger" @click="deleteItem(item)">删除</button>
+            <div class="result-actions" v-if="canModifyItem(item)">
+              <button class="btn-small" @click="editItem(item)">编辑</button>
+              <button class="btn-small btn-danger" @click="deleteItem(item)">删除</button>
             </div>
           </div>
         </div>
@@ -247,9 +247,7 @@ export default {
                   synonyms: item.synonyms,
                   antonyms: item.antonyms,
                   translation: item.translation,
-                  created_by: item.created_by,
-                  can_edit: item.can_edit,
-                  can_delete: item.can_delete
+                  created_by: item.created_by
                 })
               })
             }
@@ -274,9 +272,7 @@ export default {
                   definition: item.definition,
                   synonyms: item.synonyms,
                   antonyms: item.antonyms,
-                  created_by: item.created_by,
-                  can_edit: item.can_edit,
-                  can_delete: item.can_delete
+                  created_by: item.created_by
                 })
               })
             }
@@ -306,6 +302,18 @@ export default {
         'ciyu': '词语'
       }
       return typeMap[searchType.value] || '成语'
+    }
+
+    const canModifyItem = (item) => {
+      // 管理员可以修改所有资源
+      if (authStore.user?.role === 'admin') {
+        return true
+      }
+      // 老师只能修改自己创建的资源
+      if (authStore.user?.role === 'teacher') {
+        return item.created_by === authStore.user.username
+      }
+      return false
     }
 
     const editItem = (item) => {
@@ -345,6 +353,7 @@ export default {
       handleSearch,
       quickSearch,
       getSearchTypeText,
+      canModifyItem,
       editItem,
       deleteItem
     }

@@ -52,9 +52,9 @@
             </td>
             <td>
               <div class="action-btns">
-                <button v-if="item.can_edit === true" class="btn-small" @click="openEditModal(item)">编辑</button>
-                <button v-if="item.can_delete === true" class="btn-small btn-danger" @click="handleDelete(item)">删除</button>
-                <span v-if="item.can_edit !== true && item.can_delete !== true" class="text-muted">-</span>
+                <button v-if="canModify(item)" class="btn-small" @click="openEditModal(item)">编辑</button>
+                <button v-if="canModify(item)" class="btn-small btn-danger" @click="handleDelete(item)">删除</button>
+                <span v-if="!canModify(item)" class="text-muted">-</span>
               </div>
             </td>
           </tr>
@@ -316,10 +316,22 @@ export default {
 
     const getOwnerClass = (item) => {
       return {
-        'owner-pill--me': item.can_delete,
+        'owner-pill--me': canModify(item),
         'owner-pill--admin': item.created_by === 'admin',
         'owner-pill--system': !item.created_by || item.created_by === 'system'
       }
+    }
+
+    const canModify = (item) => {
+      // 管理员可以修改所有资源
+      if (authStore.user?.role === 'admin') {
+        return true
+      }
+      // 老师只能修改自己创建的资源（不能修改系统资源和管理员资源）
+      if (authStore.user?.role === 'teacher') {
+        return item.created_by === authStore.user.username
+      }
+      return false
     }
     
     onMounted(() => {
@@ -330,7 +342,7 @@ export default {
       authStore, ciyuList, loading, searchQuery, currentPage, totalPages, jumpPage,
       showCreateModal, showEditModal, submitting, formData,
       handleSearch, goToPage, handleJumpPage, openEditModal, closeModal,
-      handleCreate, handleUpdate, handleDelete, getOwnerText, getOwnerClass
+      handleCreate, handleUpdate, handleDelete, getOwnerText, getOwnerClass, canModify
     }
   }
 }

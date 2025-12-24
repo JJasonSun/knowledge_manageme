@@ -45,41 +45,16 @@ app.add_middleware(
 security = HTTPBearer()
 
 
-def is_public_resource(resource):
-    """判断是否为公共资源（created_by 为空、'system' 或 'admin'）"""
-    owner = getattr(resource, "created_by", None)
-    return owner is None or owner == "" or owner == "system" or owner == "admin"
-
-
-def can_view_resource(resource, current_user):
-    """检查用户是否可以查看资源"""
-    # 管理员可以查看所有
-    if current_user.role == "admin":
-        return True
-    # 公共资源（包括管理员创建的）所有人可以查看
-    if is_public_resource(resource):
-        return True
-    # 老师可以查看自己创建的
-    owner = getattr(resource, "created_by", None)
-    return owner == current_user.username
-
-
-def can_modify_resource(resource, current_user):
-    """检查用户是否可以修改资源（编辑/删除）"""
-    # 管理员可以修改所有
-    if current_user.role == "admin":
-        return True
-    # 老师只能修改自己创建的（不能修改公共资源，包括管理员创建的）
-    if is_public_resource(resource):
-        return False
-    owner = getattr(resource, "created_by", None)
-    return owner == current_user.username
-
-
 def ensure_owner_or_admin(resource, current_user):
     """确保用户有权限修改资源"""
-    if not can_modify_resource(resource, current_user):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="权限不足，只能修改自己创建的资源")
+    # 管理员可以修改所有资源
+    if current_user.role == "admin":
+        return
+    # 老师只能修改自己创建的资源
+    owner = getattr(resource, "created_by", None)
+    if owner == current_user.username:
+        return
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="权限不足，只能修改自己创建的资源")
 
 # 根路径
 @app.get("/")
@@ -184,13 +159,9 @@ async def get_chengyu_list(
         offset = (page - 1) * size
         chengyu_list = query.order_by(Chengyu.id.desc()).offset(offset).limit(size).all()
         
-        # 添加权限标记
+        # 构建返回数据
         items = []
         for chengyu in chengyu_list:
-            can_edit = can_modify_resource(chengyu, current_user)
-            can_delete = can_modify_resource(chengyu, current_user)
-            
-            # 直接构建字典，包含所有字段和权限信息
             item_dict = {
                 'id': chengyu.id,
                 'chengyu': chengyu.chengyu,
@@ -207,9 +178,7 @@ async def get_chengyu_list(
                 'translation': chengyu.translation,
                 'created_by': chengyu.created_by,
                 'created_at': chengyu.created_at,
-                'updated_at': chengyu.updated_at,
-                'can_edit': can_edit,
-                'can_delete': can_delete
+                'updated_at': chengyu.updated_at
             }
             items.append(item_dict)
         
@@ -355,13 +324,9 @@ async def get_ciyu_list(
         offset = (page - 1) * size
         ciyu_list = query.order_by(Ciyu.id.desc()).offset(offset).limit(size).all()
         
-        # 添加权限标记
+        # 构建返回数据
         items = []
         for ciyu in ciyu_list:
-            can_edit = can_modify_resource(ciyu, current_user)
-            can_delete = can_modify_resource(ciyu, current_user)
-            
-            # 直接构建字典，包含所有字段和权限信息
             item_dict = {
                 'id': ciyu.id,
                 'word': ciyu.word,
@@ -375,9 +340,7 @@ async def get_ciyu_list(
                 'antonyms': ciyu.antonyms,
                 'created_by': ciyu.created_by,
                 'created_at': ciyu.created_at,
-                'updated_at': ciyu.updated_at,
-                'can_edit': can_edit,
-                'can_delete': can_delete
+                'updated_at': ciyu.updated_at
             }
             items.append(item_dict)
         
