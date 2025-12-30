@@ -5,21 +5,46 @@
       <!-- 大搜索框区域 -->
       <div class="search-hero">
         <h1 class="search-title">中文教育资源查询</h1>
-        <p class="search-subtitle">搜索成语、词语，探索中文之美</p>
+        <p class="search-subtitle">搜索汉字、词语、成语、题目、音视频资源</p>
         
         <div class="search-wrapper">
-          <select v-model="searchType" class="search-type-select">
-            <option value="chengyu">成语</option>
-            <option value="ciyu">词语</option>
+          <!-- 第一级：选择模块 -->
+          <select v-model="selectedModule" class="search-type-select" @change="handleModuleChange">
+            <option value="">选择模块</option>
+            <option value="hanzi">汉字模块</option>
+            <option value="exam">题目模块</option>
+            <option value="media">音视频模块</option>
           </select>
+          
+          <!-- 第二级：选择具体类型 -->
+          <select v-model="selectedType" class="search-subtype-select" :disabled="!selectedModule" @change="handleTypeChange">
+            <option value="">选择类型</option>
+            <!-- 汉字模块选项 -->
+            <option v-if="selectedModule === 'hanzi'" value="zi">字</option>
+            <option v-if="selectedModule === 'hanzi'" value="ciyu">词</option>
+            <option v-if="selectedModule === 'hanzi'" value="chengyu">成语</option>
+            <!-- 题目模块选项 -->
+            <option v-if="selectedModule === 'exam'" value="hsk-listening">HSK听力题</option>
+            <option v-if="selectedModule === 'exam'" value="hsk-reading">HSK阅读题</option>
+            <option v-if="selectedModule === 'exam'" value="hsk-writing">HSK书写题</option>
+            <option v-if="selectedModule === 'exam'" value="hsk-essay">HSK写作题</option>
+            <option v-if="selectedModule === 'exam'" value="yct-listening">YCT听力题</option>
+            <option v-if="selectedModule === 'exam'" value="yct-reading">YCT阅读题</option>
+            <option v-if="selectedModule === 'exam'" value="yct-writing">YCT书写题</option>
+            <option v-if="selectedModule === 'exam'" value="yct-essay">YCT写作题</option>
+            <!-- 音视频模块选项 -->
+            <option v-if="selectedModule === 'media'" value="audio">音频</option>
+            <option v-if="selectedModule === 'media'" value="video">视频</option>
+          </select>
+          
           <input 
             v-model="searchQuery" 
             type="text" 
             class="search-input-large"
-            :placeholder="searchType === 'chengyu' ? '输入成语进行搜索...' : '输入词语进行搜索...'"
+            :placeholder="getSearchPlaceholder()"
             @keyup.enter="handleSearch"
           >
-          <button class="search-btn" @click="handleSearch" :disabled="!searchQuery.trim()">
+          <button class="search-btn" @click="handleSearch" :disabled="!canSearch">
             搜索
           </button>
         </div>
@@ -167,15 +192,20 @@
 
       <!-- 快捷操作 -->
       <div class="quick-actions">
-        <router-link to="/chengyu" class="action-card">
-          <div class="action-icon">📚</div>
-          <div class="action-title">成语管理</div>
-          <div class="action-desc">浏览和管理成语资源</div>
+        <router-link to="/hanzi/zi" class="action-card">
+          <div class="action-icon">📝</div>
+          <div class="action-title">字管理</div>
+          <div class="action-desc">浏览和管理汉字资源</div>
         </router-link>
-        <router-link to="/ciyu" class="action-card">
+        <router-link to="/hanzi/ciyu" class="action-card">
           <div class="action-icon">📖</div>
           <div class="action-title">词语管理</div>
           <div class="action-desc">浏览和管理词语资源</div>
+        </router-link>
+        <router-link to="/hanzi/chengyu" class="action-card">
+          <div class="action-icon">📚</div>
+          <div class="action-title">成语管理</div>
+          <div class="action-desc">浏览和管理成语资源</div>
         </router-link>
       </div>
     </div>
@@ -183,7 +213,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import Header from '../components/Header.vue'
 import request from '../utils/request'
 import { useAuthStore } from '../stores/auth'
@@ -197,7 +227,8 @@ export default {
     const router = useRouter()
     
     const searchQuery = ref('')
-    const searchType = ref('chengyu')
+    const selectedModule = ref('')
+    const selectedType = ref('')
     const searchResults = ref([])
     const loading = ref(false)
     const hasSearched = ref(false)
@@ -215,8 +246,46 @@ export default {
       '语言', '阅读', '写作', '思考'
     ])
 
+    // 模块变更处理
+    const handleModuleChange = () => {
+      selectedType.value = ''
+    }
+
+    // 类型变更处理
+    const handleTypeChange = () => {
+      // 可在此处添加类型变更后的额外处理
+    }
+
+    // 获取搜索提示文本
+    const getSearchPlaceholder = () => {
+      if (!selectedModule.value) return '请先选择模块和类型'
+      if (!selectedType.value) return '请选择具体类型'
+      
+      const placeholders = {
+        'zi': '输入汉字进行搜索...',
+        'ciyu': '输入词语进行搜索...',
+        'chengyu': '输入成语进行搜索...',
+        'hsk-listening': '输入关键词搜索HSK听力题...',
+        'hsk-reading': '输入关键词搜索HSK阅读题...',
+        'hsk-writing': '输入关键词搜索HSK书写题...',
+        'hsk-essay': '输入关键词搜索HSK写作题...',
+        'yct-listening': '输入关键词搜索YCT听力题...',
+        'yct-reading': '输入关键词搜索YCT阅读题...',
+        'yct-writing': '输入关键词搜索YCT书写题...',
+        'yct-essay': '输入关键词搜索YCT写作题...',
+        'audio': '输入关键词搜索音频资源...',
+        'video': '输入关键词搜索视频资源...'
+      }
+      return placeholders[selectedType.value] || '输入关键词搜索...'
+    }
+
+    // 判断是否可以搜索
+    const canSearch = computed(() => {
+      return selectedModule.value && selectedType.value && searchQuery.value.trim()
+    })
+
     const handleSearch = async () => {
-      if (!searchQuery.value.trim()) return
+      if (!selectedType.value || !searchQuery.value.trim()) return
       
       loading.value = true
       hasSearched.value = true
@@ -225,8 +294,8 @@ export default {
       try {
         const results = []
         
-        // 根据搜索类型查询对应的API
-        if (searchType.value === 'chengyu') {
+        // 根据选中的类型查询对应的API
+        if (selectedType.value === 'chengyu') {
           try {
             const chengyuRes = await request.get('/v1/chengyu', { 
               params: { search: searchQuery.value, size: 50 } 
@@ -254,7 +323,7 @@ export default {
           } catch (error) {
             console.error('搜索成语失败:', error)
           }
-        } else if (searchType.value === 'ciyu') {
+        } else if (selectedType.value === 'ciyu') {
           try {
             const ciyuRes = await request.get('/v1/ciyu', { 
               params: { search: searchQuery.value, size: 50 } 
@@ -279,6 +348,15 @@ export default {
           } catch (error) {
             console.error('搜索词语失败:', error)
           }
+        } else if (selectedType.value === 'zi') {
+          // 汉字搜索 - 待实现
+          console.log('汉字搜索功能待实现')
+        } else if (selectedType.value.startsWith('hsk-') || selectedType.value.startsWith('yct-')) {
+          // 题目搜索 - 待实现
+          console.log('题目搜索功能待实现')
+        } else if (selectedType.value === 'audio' || selectedType.value === 'video') {
+          // 音视频搜索 - 待实现
+          console.log('音视频搜索功能待实现')
         }
 
         searchResults.value = results
@@ -291,17 +369,30 @@ export default {
       }
     }
 
-    const quickSearch = (keyword) => {
+    const quickSearch = (keyword, type = 'chengyu') => {
       searchQuery.value = keyword
+      selectedModule.value = 'hanzi'
+      selectedType.value = type
       handleSearch()
     }
 
     const getSearchTypeText = () => {
       const typeMap = {
+        'zi': '字',
+        'ciyu': '词',
         'chengyu': '成语',
-        'ciyu': '词语'
+        'hsk-listening': 'HSK听力题',
+        'hsk-reading': 'HSK阅读题',
+        'hsk-writing': 'HSK书写题',
+        'hsk-essay': 'HSK写作题',
+        'yct-listening': 'YCT听力题',
+        'yct-reading': 'YCT阅读题',
+        'yct-writing': 'YCT书写题',
+        'yct-essay': 'YCT写作题',
+        'audio': '音频',
+        'video': '视频'
       }
-      return typeMap[searchType.value] || '成语'
+      return typeMap[selectedType.value] || '资源'
     }
 
     const canModifyItem = (item) => {
@@ -343,13 +434,18 @@ export default {
     return {
       authStore,
       searchQuery,
-      searchType,
+      selectedModule,
+      selectedType,
       searchResults,
       loading,
       hasSearched,
       totalResults,
       sampleChengyu,
       sampleCiyu,
+      canSearch,
+      handleModuleChange,
+      handleTypeChange,
+      getSearchPlaceholder,
       handleSearch,
       quickSearch,
       getSearchTypeText,
@@ -403,9 +499,25 @@ export default {
   outline: none;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   background: white;
-  color: #667eea;
-  font-weight: bold;
-  min-width: 100px;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.search-subtype-select {
+  padding: 16px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 50px;
+  outline: none;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  background: white;
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.search-subtype-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .search-input-large {
