@@ -25,15 +25,6 @@
         <div class="placeholder-icon">📚</div>
         <h3>功能开发中</h3>
         <p>汉字管理模块正在开发中，敬请期待！</p>
-        <div class="placeholder-tips">
-          <p>计划功能：</p>
-          <ul>
-            <li>汉字基本信息管理（字形、拼音、笔画等）</li>
-            <li>汉字部件拆解与分析</li>
-            <li>汉字书写顺序演示</li>
-            <li>汉字组词与例句</li>
-          </ul>
-        </div>
       </div>
       
       <!-- 分页（预留） -->
@@ -172,42 +163,6 @@ export default {
   color: #666;
   margin-bottom: 30px;
   font-size: 1.1rem;
-}
-
-.placeholder-tips {
-  text-align: left;
-  max-width: 500px;
-  margin: 0 auto;
-  background-color: white;
-  padding: 25px;
-  border-radius: 8px;
-}
-
-.placeholder-tips p {
-  color: #667eea;
-  font-weight: bold;
-  margin-bottom: 15px;
-  font-size: 1.1rem;
-}
-
-.placeholder-tips ul {
-  list-style: none;
-  padding: 0;
-}
-
-.placeholder-tips li {
-  padding: 8px 0;
-  color: #555;
-  position: relative;
-  padding-left: 25px;
-}
-
-.placeholder-tips li:before {
-  content: "✓";
-  position: absolute;
-  left: 0;
-  color: #28a745;
-  font-weight: bold;
 }
 
 .pagination {

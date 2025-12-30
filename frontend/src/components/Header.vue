@@ -113,13 +113,13 @@ export default {
   padding: 0 30px;
   height: 60px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .title {
   font-size: 1.4rem;
   font-weight: bold;
+  color: white;
 }
 
 .nav-links {
@@ -219,6 +219,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 15px;
+  color: white;
 }
 
 .btn {

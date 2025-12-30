@@ -50,163 +50,182 @@
         </div>
       </div>
 
-      <!-- 样例常用词语 -->
-      <div class="sample-section">
-        <h3 class="section-title">常用成语</h3>
-        <div class="sample-tags">
-          <span 
-            v-for="item in sampleChengyu" 
-            :key="item" 
-            class="sample-tag"
-            @click="quickSearch(item)"
-          >
-            {{ item }}
-          </span>
-        </div>
-      </div>
-
-      <div class="sample-section">
-        <h3 class="section-title">常用词语</h3>
-        <div class="sample-tags">
-          <span 
-            v-for="item in sampleCiyu" 
-            :key="item" 
-            class="sample-tag sample-tag--ciyu"
-            @click="quickSearch(item)"
-          >
-            {{ item }}
-          </span>
-        </div>
-      </div>
-
-      <!-- 搜索结果区域 -->
-      <div v-if="hasSearched" class="results-section">
-        <h3 class="section-title">
-          搜索结果 
-          <span class="result-count">
-            （{{ getSearchTypeText() }}，共 {{ totalResults }} 条）
-          </span>
-        </h3>
-
-        <div v-if="loading" class="loading">搜索中...</div>
-
-        <div v-else-if="searchResults.length === 0" class="no-results">
-          未找到相关结果，试试其他关键词？
+      <!-- 三大模块展示 -->
+      <div class="modules-section">
+        <!-- 汉字模块 -->
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-icon">📝</div>
+            <h3 class="module-title">汉字模块</h3>
+          </div>
+          <div class="module-items">
+            <div class="module-group-items">
+              <router-link to="/hanzi/zi" class="module-item small">汉字管理</router-link>
+              <router-link to="/hanzi/ciyu" class="module-item small">词语管理</router-link>
+              <router-link to="/hanzi/chengyu" class="module-item small">成语管理</router-link>
+            </div>
+          </div>
         </div>
 
-        <div v-else class="results-list">
-          <div 
-            v-for="item in searchResults" 
-            :key="item.type + '-' + item.id" 
-            class="result-card"
-          >
-            <div class="result-header">
-              <span class="result-word">{{ item.word }}</span>
-              <span class="result-type" :class="'type-' + item.type">
-                {{ item.type === 'chengyu' ? '成语' : '词语' }}
-              </span>
-              <span v-if="canModifyItem(item)" class="result-mine">我的</span>
-              <span v-else-if="item.created_by === 'admin'" class="result-admin">管理员</span>
-              <span v-else-if="!item.created_by || item.created_by === 'system'" class="result-system">系统</span>
-            </div>
-            
-            <!-- 拼音和注音 -->
-            <div class="result-phonetic">
-              <span v-if="item.pinyin" class="pinyin">拼音：{{ item.pinyin }}</span>
-              <span v-if="item.zhuyin" class="zhuyin">注音：{{ item.zhuyin }}</span>
-            </div>
-            
-            <!-- 成语特有字段 -->
-            <div v-if="item.type === 'chengyu'" class="result-details">
-              <div v-if="item.emotion" class="detail-item">
-                <span class="label">情感色彩：</span>{{ item.emotion }}
-              </div>
-              <div v-if="item.source" class="detail-item">
-                <span class="label">来源：</span>{{ item.source }}
-              </div>
-              <div v-if="item.usage" class="detail-item">
-                <span class="label">用法：</span>{{ item.usage }}
-              </div>
-              <div v-if="item.translation" class="detail-item">
-                <span class="label">翻译：</span>{{ item.translation }}
+        <!-- 题目模块 -->
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-icon">📋</div>
+            <h3 class="module-title">题目模块</h3>
+          </div>
+          <div class="module-items">
+            <div class="module-group">
+              <div class="module-group-title">HSK</div>
+              <div class="module-group-items">
+                <router-link to="/exam/hsk/listening" class="module-item small">听力题</router-link>
+                <router-link to="/exam/hsk/reading" class="module-item small">阅读题</router-link>
+                <router-link to="/exam/hsk/writing" class="module-item small">书写题</router-link>
+                <router-link to="/exam/hsk/essay" class="module-item small">写作题</router-link>
               </div>
             </div>
-            
-            <!-- 词语特有字段 -->
-            <div v-if="item.type === 'ciyu'" class="result-details">
-              <div v-if="item.part_of_speech" class="detail-item">
-                <span class="label">词性：</span>{{ item.part_of_speech }}
+            <div class="module-group">
+              <div class="module-group-title">YCT</div>
+              <div class="module-group-items">
+                <router-link to="/exam/yct/listening" class="module-item small">听力题</router-link>
+                <router-link to="/exam/yct/reading" class="module-item small">阅读题</router-link>
+                <router-link to="/exam/yct/writing" class="module-item small">书写题</router-link>
+                <router-link to="/exam/yct/essay" class="module-item small">写作题</router-link>
               </div>
-              <div v-if="item.is_common !== null" class="detail-item">
-                <span class="label">常用程度：</span>{{ item.is_common ? '常用词' : '非常用词' }}
-              </div>
             </div>
-            
-            <!-- 定义/解释 -->
-            <div class="result-definition">
-              <span class="label">{{ item.type === 'chengyu' ? '解释：' : '定义：' }}</span>
-              {{ item.definition }}
-            </div>
-            
-            <!-- 例句 -->
-            <div v-if="item.example" class="result-example">
-              <span class="label">例句：</span>{{ item.example }}
-            </div>
-            
-            <!-- 同义词和反义词 -->
-            <div v-if="item.synonyms && item.synonyms.length > 0" class="result-relations">
-              <span class="label">同义词：</span>
-              <span class="relation-tags">
-                <span 
-                  v-for="synonym in item.synonyms" 
-                  :key="synonym" 
-                  class="relation-tag synonym"
-                  @click="quickSearch(synonym)"
-                >
-                  {{ synonym }}
-                </span>
-              </span>
-            </div>
-            <div v-if="item.antonyms && item.antonyms.length > 0" class="result-relations">
-              <span class="label">反义词：</span>
-              <span class="relation-tags">
-                <span 
-                  v-for="antonym in item.antonyms" 
-                  :key="antonym" 
-                  class="relation-tag antonym"
-                  @click="quickSearch(antonym)"
-                >
-                  {{ antonym }}
-                </span>
-              </span>
-            </div>
-            
-            <!-- 操作按钮 -->
-            <div class="result-actions" v-if="canModifyItem(item)">
-              <button class="btn-small" @click="editItem(item)">编辑</button>
-              <button class="btn-small btn-danger" @click="deleteItem(item)">删除</button>
+          </div>
+        </div>
+
+        <!-- 音视频模块 -->
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-icon">🎬</div>
+            <h3 class="module-title">音视频模块</h3>
+          </div>
+          <div class="module-items">
+            <div class="module-group-items">
+              <router-link to="/media/audio" class="module-item small">音频资源</router-link>
+              <router-link to="/media/video" class="module-item small">视频资源</router-link>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 快捷操作 -->
-      <div class="quick-actions">
-        <router-link to="/hanzi/zi" class="action-card">
-          <div class="action-icon">📝</div>
-          <div class="action-title">字管理</div>
-          <div class="action-desc">浏览和管理汉字资源</div>
-        </router-link>
-        <router-link to="/hanzi/ciyu" class="action-card">
-          <div class="action-icon">📖</div>
-          <div class="action-title">词语管理</div>
-          <div class="action-desc">浏览和管理词语资源</div>
-        </router-link>
-        <router-link to="/hanzi/chengyu" class="action-card">
-          <div class="action-icon">📚</div>
-          <div class="action-title">成语管理</div>
-          <div class="action-desc">浏览和管理成语资源</div>
-        </router-link>
+      <!-- 搜索结果弹窗 -->
+      <div v-if="showResultsModal" class="results-modal" @click.self="closeResultsModal">
+        <div class="results-modal-content">
+          <div class="results-modal-header">
+            <h3>
+              搜索结果
+              <span class="result-count">
+                （{{ getSearchTypeText() }}，共 {{ totalResults }} 条）
+              </span>
+            </h3>
+            <button class="close-btn" @click="closeResultsModal">×</button>
+          </div>
+
+          <div class="results-modal-body">
+            <div v-if="loading" class="loading">搜索中...</div>
+
+            <div v-else-if="searchResults.length === 0" class="no-results">
+              未找到相关结果，试试其他关键词？
+            </div>
+
+            <div v-else class="results-list">
+              <div 
+                v-for="item in searchResults" 
+                :key="item.type + '-' + item.id" 
+                class="result-card"
+              >
+                <div class="result-header">
+                  <span class="result-word">{{ item.word }}</span>
+                  <span class="result-type" :class="'type-' + item.type">
+                    {{ item.type === 'chengyu' ? '成语' : '词语' }}
+                  </span>
+                  <span v-if="canModifyItem(item)" class="result-mine">我的</span>
+                  <span v-else-if="item.created_by === 'admin'" class="result-admin">管理员</span>
+                  <span v-else-if="!item.created_by || item.created_by === 'system'" class="result-system">系统</span>
+                </div>
+                
+                <!-- 拼音和注音 -->
+                <div class="result-phonetic">
+                  <span v-if="item.pinyin" class="pinyin">拼音：{{ item.pinyin }}</span>
+                  <span v-if="item.zhuyin" class="zhuyin">注音：{{ item.zhuyin }}</span>
+                </div>
+                
+                <!-- 成语特有字段 -->
+                <div v-if="item.type === 'chengyu'" class="result-details">
+                  <div v-if="item.emotion" class="detail-item">
+                    <span class="label">情感色彩：</span>{{ item.emotion }}
+                  </div>
+                  <div v-if="item.source" class="detail-item">
+                    <span class="label">来源：</span>{{ item.source }}
+                  </div>
+                  <div v-if="item.usage" class="detail-item">
+                    <span class="label">用法：</span>{{ item.usage }}
+                  </div>
+                  <div v-if="item.translation" class="detail-item">
+                    <span class="label">翻译：</span>{{ item.translation }}
+                  </div>
+                </div>
+                
+                <!-- 词语特有字段 -->
+                <div v-if="item.type === 'ciyu'" class="result-details">
+                  <div v-if="item.part_of_speech" class="detail-item">
+                    <span class="label">词性：</span>{{ item.part_of_speech }}
+                  </div>
+                  <div v-if="item.is_common !== null" class="detail-item">
+                    <span class="label">常用程度：</span>{{ item.is_common ? '常用词' : '非常用词' }}
+                  </div>
+                </div>
+                
+                <!-- 定义/解释 -->
+                <div class="result-definition">
+                  <span class="label">{{ item.type === 'chengyu' ? '解释：' : '定义：' }}</span>
+                  {{ item.definition }}
+                </div>
+                
+                <!-- 例句 -->
+                <div v-if="item.example" class="result-example">
+                  <span class="label">例句：</span>{{ item.example }}
+                </div>
+                
+                <!-- 同义词和反义词 -->
+                <div v-if="item.synonyms && item.synonyms.length > 0" class="result-relations">
+                  <span class="label">同义词：</span>
+                  <span class="relation-tags">
+                    <span 
+                      v-for="synonym in item.synonyms" 
+                      :key="synonym" 
+                      class="relation-tag synonym"
+                      @click="quickSearch(synonym)"
+                    >
+                      {{ synonym }}
+                    </span>
+                  </span>
+                </div>
+                <div v-if="item.antonyms && item.antonyms.length > 0" class="result-relations">
+                  <span class="label">反义词：</span>
+                  <span class="relation-tags">
+                    <span 
+                      v-for="antonym in item.antonyms" 
+                      :key="antonym" 
+                      class="relation-tag antonym"
+                      @click="quickSearch(antonym)"
+                    >
+                      {{ antonym }}
+                    </span>
+                  </span>
+                </div>
+                
+                <!-- 操作按钮 -->
+                <div class="result-actions" v-if="canModifyItem(item)">
+                  <button class="btn-small" @click="editItem(item)">编辑</button>
+                  <button class="btn-small btn-danger" @click="deleteItem(item)">删除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -233,18 +252,7 @@ export default {
     const loading = ref(false)
     const hasSearched = ref(false)
     const totalResults = ref(0)
-
-    // 样例成语
-    const sampleChengyu = ref([
-      '一心一意', '画龙点睛', '守株待兔', '亡羊补牢', 
-      '掩耳盗铃', '刻舟求剑', '叶公好龙', '杯弓蛇影'
-    ])
-
-    // 样例词语
-    const sampleCiyu = ref([
-      '学习', '知识', '教育', '文化', 
-      '语言', '阅读', '写作', '思考'
-    ])
+    const showResultsModal = ref(false)
 
     // 模块变更处理
     const handleModuleChange = () => {
@@ -290,6 +298,7 @@ export default {
       loading.value = true
       hasSearched.value = true
       searchResults.value = []
+      showResultsModal.value = true
       
       try {
         const results = []
@@ -431,6 +440,10 @@ export default {
       }
     }
 
+    const closeResultsModal = () => {
+      showResultsModal.value = false
+    }
+
     return {
       authStore,
       searchQuery,
@@ -440,8 +453,7 @@ export default {
       loading,
       hasSearched,
       totalResults,
-      sampleChengyu,
-      sampleCiyu,
+      showResultsModal,
       canSearch,
       handleModuleChange,
       handleTypeChange,
@@ -451,7 +463,8 @@ export default {
       getSearchTypeText,
       canModifyItem,
       editItem,
-      deleteItem
+      deleteItem,
+      closeResultsModal
     }
   }
 }
@@ -486,125 +499,299 @@ export default {
 
 .search-wrapper {
   display: flex;
-  max-width: 600px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  max-width: 700px;
   margin: 0 auto;
-  gap: 10px;
+}
+
+.search-type-select,
+.search-subtype-select {
+  padding: 14px 20px;
+  font-size: 15px;
+  border: 2px solid white;
+  border-radius: 8px;
+  outline: none;
+  background: white;
+  cursor: pointer;
+  color: #333;
+  transition: all 0.3s;
 }
 
 .search-type-select {
-  padding: 16px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 50px;
-  outline: none;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  background: white;
-  cursor: pointer;
-  min-width: 120px;
+  min-width: 130px;
 }
 
 .search-subtype-select {
-  padding: 16px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 50px;
-  outline: none;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  background: white;
-  cursor: pointer;
-  min-width: 140px;
+  min-width: 150px;
+}
+
+.search-type-select:hover,
+.search-subtype-select:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.search-subtype-select:focus,
+.search-type-select:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5), 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .search-subtype-select:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background: #f0f0f0;
+  border-color: #f0f0f0;
 }
 
 .search-input-large {
   flex: 1;
-  padding: 16px 24px;
-  font-size: 18px;
-  border: none;
-  border-radius: 50px;
+  min-width: 200px;
+  padding: 14px 24px;
+  font-size: 16px;
+  border: 2px solid white;
+  border-radius: 8px;
   outline: none;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  background: white;
+  color: #333;
+  transition: all 0.3s;
+}
+
+.search-input-large:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.search-input-large:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.search-input-large::placeholder {
+  color: #999;
 }
 
 .search-btn {
-  padding: 16px 32px;
+  padding: 14px 40px;
   font-size: 16px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
   color: #667eea;
   border: none;
-  border-radius: 50px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
-  transition: transform 0.2s;
+  transition: all 0.3s;
 }
 
 .search-btn:hover:not(:disabled) {
-  transform: scale(1.05);
+  background: white;
+  color: #764ba2;
+}
+
+.search-btn:active:not(:disabled) {
+  background: white;
+  color: #764ba2;
 }
 
 .search-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.6);
 }
 
-.sample-section {
-  margin-bottom: 25px;
+/* 三大模块展示区 */
+.modules-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 30px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.section-title {
-  font-size: 18px;
-  color: #333;
-  margin-bottom: 15px;
+.module-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.module-header {
   display: flex;
   align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.module-icon {
+  font-size: 32px;
+}
+
+.module-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.module-items {
+  display: grid;
+  gap: 12px;
+}
+
+.module-group {
+  margin-bottom: 16px;
+}
+
+.module-group:last-child {
+  margin-bottom: 0;
+}
+
+.module-group-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.module-group-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+}
+
+.module-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+  border-radius: 10px;
+  text-decoration: none;
+  color: #333;
+}
+
+.module-item:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.module-item-icon {
+  font-size: 28px;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.module-item:hover .module-item-icon {
+  color: white;
+}
+
+.module-item-name {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.module-item.small {
+  justify-content: center;
+  font-size: 14px;
+}
+
+/* 搜索结果弹窗 */
+.results-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.results-modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.results-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.results-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
 }
 
 .result-count {
   font-size: 14px;
   color: #666;
   font-weight: normal;
+  margin-left: 8px;
 }
 
-.sample-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.sample-tag {
-  padding: 8px 16px;
-  background: #e8f4fd;
-  color: #1976d2;
-  border-radius: 20px;
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #999;
   cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
-  font-size: 14px;
 }
 
-.sample-tag:hover {
-  background: #1976d2;
-  color: white;
+.close-btn:hover {
+  background: #f0f0f0;
+  color: #333;
 }
 
-.sample-tag--ciyu {
-  background: #e8f5e9;
-  color: #388e3c;
-}
-
-.sample-tag--ciyu:hover {
-  background: #388e3c;
-  color: white;
-}
-
-.results-section {
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
+.results-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
 }
 
 .loading, .no-results {
@@ -619,11 +806,15 @@ export default {
 }
 
 .result-card {
-  background: white;
+  background: #f9f9f9;
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   transition: box-shadow 0.2s;
+}
+
+.result-card:hover {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.12);
 }
 
 .result-card:hover {

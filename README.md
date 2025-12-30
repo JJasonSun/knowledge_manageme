@@ -90,12 +90,90 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 ## 核心功能
 
+### 模块架构
+系统已重构为三大核心模块，采用模块化设计：
+
+#### 1️⃣ 汉字模块
+- **字**：汉字管理（框架已搭建，待后端实现）
+- **词**：词语管理（支持增删改查，包含拼音、释义、例句等字段）
+- **成语**：成语管理（支持增删改查，包含拼音、释义、例句、出处等字段）
+
+#### 2️⃣ 题目模块
+- **HSK考试**：听力题、阅读题、书写题、写作题
+- **YCT考试**：听力题、阅读题、书写题、写作题
+- *注：框架已搭建，待后端实现数据*
+
+#### 3️⃣ 音视频资源模块
+- **音频资源**：音频资源管理（框架已搭建，待后端实现）
+- **视频资源**：视频资源管理（框架已搭建，待后端实现）
+
+### 系统特性
+
 - **权限管理**:
   - **管理员 (Admin)**: 拥有最高权限，可以查看、编辑和删除系统中所有的成语和词语资源。
   - **老师 (Teacher)**: 可以创建自己的资源，但只能查看、编辑和删除自己创建的内容。
-- **资源管理**: 支持成语和词语的增删改查，包含拼音、释义、例句等详细字段。
-- **智能搜索**: 支持按名称、拼音或释义进行模糊搜索。
+- **智能搜索**: 首页支持二级级联搜索，先选择模块再选择子类型，支持模糊搜索。
+- **模块导航**: 顶部导航栏采用下拉菜单形式，各模块下显示子选项，方便快速访问。
 - **响应式设计**: 前端采用 Vue 3 开发，提供流畅的用户交互体验。
+- **统一UI**: 采用紫色渐变主题（#667eea → #764ba2），界面简洁协调。
+
+## 前端路由结构
+
+```
+/home                          - 首页（级联搜索 + 模块展示）
+/hanzi/zi                     - 汉字管理
+/hanzi/ciyu                   - 词语管理
+/hanzi/chengyu                - 成语管理
+/exam/hsk/listening           - HSK听力题
+/exam/hsk/reading             - HSK阅读题
+/exam/hsk/writing             - HSK书写题
+/exam/hsk/essay               - HSK写作题
+/exam/yct/listening           - YCT听力题
+/exam/yct/reading             - YCT阅读题
+/exam/yct/writing             - YCT书写题
+/exam/yct/essay               - YCT写作题
+/media/audio                   - 音频资源
+/media/video                   - 视频资源
+```
+
+**路由重定向**：
+- `/chengyu` → `/hanzi/chengyu`（向后兼容）
+- `/ciyu` → `/hanzi/ciyu`（向后兼容）
+
+## 项目结构更新
+
+### 前端目录结构
+```
+frontend/
+├── src/
+│   ├── components/
+│   │   └── Header.vue              # 更新：添加三个模块下拉菜单
+│   ├── router/
+│   │   └── index.js                # 更新：新增13个路由
+│   ├── stores/
+│   │   └── auth.js                 # 认证状态管理
+│   ├── utils/
+│   │   └── request.js              # HTTP请求封装
+│   └── views/
+│       ├── Home.vue                # 更新：级联搜索 + 模块卡片
+│       ├── CiyuList.vue            # 词语管理列表
+│       ├── ChengyuList.vue         # 成语管理列表
+│       ├── hanzi/
+│       │   └── HanziList.vue       # 新增：汉字管理
+│       ├── exam/
+│       │   ├── ExamTemplate.vue    # 新增：题目通用模板
+│       │   ├── HSKListening.vue    # 新增
+│       │   ├── HSKReading.vue      # 新增
+│       │   ├── HSKWriting.vue      # 新增
+│       │   ├── HSKEssay.vue        # 新增
+│       │   ├── YCTListening.vue    # 新增
+│       │   ├── YCTReading.vue      # 新增
+│       │   ├── YCTWriting.vue      # 新增
+│       │   └── YCTEssay.vue        # 新增
+│       └── media/
+│           ├── AudioList.vue       # 新增：音频资源
+│           └── VideoList.vue       # 新增：视频资源
+```
 
 ## 常见问题
 

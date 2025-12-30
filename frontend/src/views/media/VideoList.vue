@@ -25,17 +25,6 @@
         <div class="placeholder-icon">🎬</div>
         <h3>功能开发中</h3>
         <p>视频资源管理模块正在开发中，敬请期待！</p>
-        <div class="placeholder-tips">
-          <p>计划功能：</p>
-          <ul>
-            <li>视频文件上传与管理</li>
-            <li>视频元数据编辑（标题、时长、格式、分辨率等）</li>
-            <li>视频在线播放</li>
-            <li>视频缩略图预览</li>
-            <li>视频分类与标签</li>
-            <li>与汉字、词语、成语的关联</li>
-          </ul>
-        </div>
       </div>
       
       <!-- 示例视频卡片（预留） -->
@@ -189,42 +178,6 @@ export default {
   color: #666;
   margin-bottom: 30px;
   font-size: 1.1rem;
-}
-
-.placeholder-tips {
-  text-align: left;
-  max-width: 500px;
-  margin: 0 auto;
-  background-color: white;
-  padding: 25px;
-  border-radius: 8px;
-}
-
-.placeholder-tips p {
-  color: #667eea;
-  font-weight: bold;
-  margin-bottom: 15px;
-  font-size: 1.1rem;
-}
-
-.placeholder-tips ul {
-  list-style: none;
-  padding: 0;
-}
-
-.placeholder-tips li {
-  padding: 8px 0;
-  color: #555;
-  position: relative;
-  padding-left: 25px;
-}
-
-.placeholder-tips li:before {
-  content: "✓";
-  position: absolute;
-  left: 0;
-  color: #28a745;
-  font-weight: bold;
 }
 
 .media-grid {
