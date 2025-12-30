@@ -23,8 +23,8 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.data.access_token) {
         token.value = response.data.access_token
         user.value = {
-          username: username,
-          role: response.data.role || 'user'
+          username: response.data.user?.username || username,
+          role: response.data.user?.role || 'user'
         }
         
         localStorage.setItem('token', token.value)

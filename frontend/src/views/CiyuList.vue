@@ -54,9 +54,9 @@
             </td>
             <td>
               <div class="action-btns">
-                <button v-if="canModify(item)" class="btn-small" @click="openEditModal(item)">编辑</button>
-                <button v-if="canModify(item)" class="btn-small btn-danger" @click="handleDelete(item)">删除</button>
-                <span v-if="!canModify(item)" class="text-muted">-</span>
+                <button class="btn-action btn-view" @click="openDetailModal(item)">查看</button>
+                <button v-if="canModify(item)" class="btn-action btn-edit" @click="openEditModal(item)">编辑</button>
+                <button v-if="canModify(item)" class="btn-action btn-delete" @click="handleDelete(item)">删除</button>
               </div>
             </td>
           </tr>
@@ -149,12 +149,73 @@
         </form>
       </div>
     </div>
+
+    <!-- 详情查看弹窗 - 与首页搜索结果样式一致 -->
+    <div v-if="showDetailModal" class="results-modal" @click.self="closeDetailModal">
+      <div class="results-modal-content">
+        <div class="results-modal-header">
+          <h3>词语详情</h3>
+          <button class="close-btn" @click="closeDetailModal">×</button>
+        </div>
+        <div class="results-modal-body">
+          <div class="result-card">
+            <div class="result-header">
+              <span class="result-word">{{ detailItem?.word }}</span>
+              <span class="result-type type-ciyu">词语</span>
+              <span v-if="canModify(detailItem)" class="result-mine">我的</span>
+              <span v-else-if="detailItem?.created_by === 'admin'" class="result-admin">管理员</span>
+              <span v-else-if="!detailItem?.created_by || detailItem?.created_by === 'system'" class="result-system">系统</span>
+            </div>
+            
+            <!-- 拼音和注音 -->
+            <div class="result-phonetic">
+              <span v-if="detailItem?.pinyin" class="pinyin">拼音：{{ detailItem.pinyin }}</span>
+              <span v-if="detailItem?.zhuyin" class="zhuyin">注音：{{ detailItem.zhuyin }}</span>
+            </div>
+            
+            <!-- 词语特有字段 -->
+            <div class="result-details">
+              <div v-if="detailItem?.part_of_speech" class="detail-item">
+                <span class="label">词性：</span>{{ detailItem.part_of_speech }}
+              </div>
+              <div v-if="detailItem?.is_common !== null" class="detail-item">
+                <span class="label">常用程度：</span>{{ detailItem.is_common ? '常用词' : '非常用词' }}
+              </div>
+            </div>
+            
+            <!-- 定义 -->
+            <div v-if="detailItem?.definition" class="result-definition">
+              <span class="label">定义：</span>{{ detailItem.definition }}
+            </div>
+            
+            <!-- 同义词和反义词 -->
+            <div v-if="detailItem?.synonyms && detailItem.synonyms.length > 0" class="result-relations">
+              <span class="label">同义词：</span>
+              <span class="relation-tags">
+                <span v-for="s in detailItem.synonyms" :key="s" class="relation-tag synonym">{{ s }}</span>
+              </span>
+            </div>
+            <div v-if="detailItem?.antonyms && detailItem.antonyms.length > 0" class="result-relations">
+              <span class="label">反义词：</span>
+              <span class="relation-tags">
+                <span v-for="a in detailItem.antonyms" :key="a" class="relation-tag antonym">{{ a }}</span>
+              </span>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="result-actions" v-if="canModify(detailItem)">
+              <button class="btn-small btn-header" @click="closeDetailModal(); openEditModal(detailItem)">编辑</button>
+              <button class="btn-small btn-header btn-danger-header" @click="handleDelete(detailItem); closeDetailModal()">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
 import Header from '../components/Header.vue'
 import request from '../utils/request'
 import { useAuthStore } from '../stores/auth'
@@ -163,7 +224,6 @@ export default {
   name: 'CiyuList',
   components: { Header },
   setup() {
-    const route = useRoute()
     const authStore = useAuthStore()
     const ciyuList = ref([])
     const loading = ref(true)
@@ -175,8 +235,10 @@ export default {
     
     const showCreateModal = ref(false)
     const showEditModal = ref(false)
+    const showDetailModal = ref(false)
     const submitting = ref(false)
     const editingId = ref(null)
+    const detailItem = ref(null)
     
     const formData = ref({
       word: '',
@@ -255,6 +317,16 @@ export default {
       showEditModal.value = true
     }
 
+    const openDetailModal = (item) => {
+      detailItem.value = item
+      showDetailModal.value = true
+    }
+
+    const closeDetailModal = () => {
+      showDetailModal.value = false
+      detailItem.value = null
+    }
+
     const handleCreate = async () => {
       submitting.value = true
       try {
@@ -328,8 +400,8 @@ export default {
     
     return {
       authStore, ciyuList, loading, searchQuery, currentPage, totalPages, jumpPage,
-      showCreateModal, showEditModal, submitting, formData,
-      handleSearch, goToPage, handleJumpPage, openEditModal, closeModal,
+      showCreateModal, showEditModal, showDetailModal, submitting, formData, detailItem,
+      handleSearch, goToPage, handleJumpPage, openEditModal, openDetailModal, closeModal, closeDetailModal,
       handleCreate, handleUpdate, handleDelete, getOwnerText, getOwnerClass, canModify
     }
   }
@@ -440,4 +512,279 @@ export default {
   margin: 0 15px;
 }
 
+/* 操作按钮样式 */
+.btn-action {
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: 1px solid;
+}
+
+.btn-view {
+  background: white;
+  color: #66bb6a;
+  border-color: #66bb6a;
+}
+
+.btn-view:hover {
+  background: #66bb6a;
+  color: white;
+}
+
+.btn-edit {
+  background: white;
+  color: #ff9800;
+  border-color: #ff9800;
+}
+
+.btn-edit:hover {
+  background: #ff9800;
+  color: white;
+}
+
+.btn-delete {
+  background: white;
+  color: #f44336;
+  border-color: #f44336;
+}
+
+.btn-delete:hover {
+  background: #f44336;
+  color: white;
+}
+
+/* 详情弹窗样式 - 与首页一致 */
+.results-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.results-modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.results-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.results-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #999;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.results-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.result-card {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.result-word {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.result-type {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.type-ciyu {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.result-mine {
+  padding: 2px 8px;
+  background: #e8f5e9;
+  color: #66bb6a;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.result-admin {
+  padding: 2px 8px;
+  background: #e8f5e9;
+  color: #66bb6a;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.result-system {
+  padding: 2px 8px;
+  background: #e8f5e9;
+  color: #888;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.result-phonetic {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+.pinyin, .zhuyin {
+  display: flex;
+  align-items: center;
+}
+
+.result-details {
+  margin-bottom: 12px;
+}
+
+.detail-item {
+  margin-bottom: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.label {
+  font-weight: bold;
+  color: #555;
+  margin-right: 4px;
+}
+
+.result-definition {
+  color: #444;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.result-relations {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.relation-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.relation-tag {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.relation-tag.synonym {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.relation-tag.antonym {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.result-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.btn-small {
+  padding: 4px 12px;
+  font-size: 12px;
+  border: 1px solid #66bb6a;
+  background: white;
+  color: #66bb6a;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-small:hover {
+  background: #66bb6a;
+  color: white;
+}
+
+.btn-header {
+  background: white;
+  color: #66bb6a;
+  border: 1px solid #66bb6a;
+}
+
+.btn-danger-header {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-danger-header:hover {
+  background: #dc3545;
+  color: white;
+}
 </style>
