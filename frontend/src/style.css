@@ -60,95 +60,250 @@ body {
 }
 
 .btn {
-  padding: 8px 16px;
+  padding: 10px 20px;
   border: 1px solid #ddd;
   background: white;
-  border-radius: 4px;
+  color: #333;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  font-weight: bold;
+  transition: all 0.3s;
 }
 
 .btn:hover {
-  background-color: #f8f9fa;
+  background: #f8f9fa;
+  color: #66bb6a;
 }
 
 .btn-primary {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
+  background: white;
+  color: #66bb6a;
+  border: 1px solid #66bb6a;
+  font-weight: bold;
 }
 
 .btn-primary:hover {
-  background-color: #0056b3;
+  background: #66bb6a;
+  color: white;
+}
+
+.btn-header {
+  background: white;
+  color: #66bb6a;
+  border: 1px solid #66bb6a;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-header:hover {
+  background: #66bb6a;
+  color: white;
+}
+
+.btn-add {
+  background: white;
+  color: #66bb6a;
+  border: 1px solid #66bb6a;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-add:hover {
+  background: #66bb6a;
+  color: white;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 18px 24px;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #333;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.permission-info {
+  color: #666;
+  background-color: #f5f5f5;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  font-size: 0.85rem;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-small {
+  padding: 6px 16px;
+  font-size: 13px;
+  border: 1px solid #66bb6a;
+  background: white;
+  color: #66bb6a;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.btn-small:hover {
+  background: #66bb6a;
+  color: white;
+}
+
+.btn-danger {
+  background: #f44336;
+  color: white;
+  border: 1px solid #f44336;
+}
+
+.btn-danger:hover {
+  background: #d32f2f;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .owner-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background-color: #f0f0f0;
-  font-size: 12px;
-  color: #333;
-  border: 1px solid transparent;
+  background-color: #fff7cc;
+  color: #6d4c41;
 }
 
-.owner-pill--me {
-  background-color: #007bff;
-  color: #fff;
-  border-color: #007bff;
+.owner-pill--me,
+.owner-pill--admin {
+  background-color: #fff7cc;
+  color: #6d4c41;
+}
+
+.owner-pill--system {
+  background-color: #dfe3e6;
+  color: #81959f;
+}
+
+.common-badge {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.common-badge.common {
+  background-color: rgba(102, 187, 106, 0.15);
+  color: #2e7d32;
+}
+
+.common-badge.rare {
+  background-color: #dfe3e6;
+  color: #81959f;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .form-label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
 }
 
 .form-input {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
   font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #66bb6a;
 }
 
 .table {
   width: 100%;
   background-color: white;
   border-collapse: collapse;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .table th,
 .table td {
-  padding: 12px;
+  padding: 16px;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #f0f0f0;
+  border-right: 1px solid #f0f0f0;
+}
+
+.table th:last-child,
+.table td:last-child {
+  border-right: none;
 }
 
 .table th {
-  background-color: #f8f9fa;
+  background: #f1f8e9;
+  color: #66bb6a;
   font-weight: bold;
 }
 
 .table tr:hover {
-  background-color: #f5f5f5;
+  background-color: #f8f9fa;
+}
+
+.table tr:hover td {
+  color: #66bb6a;
 }
 
 .search-box {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .search-input {
-  width: 300px;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #66bb6a;
 }
 
 .pagination {
@@ -156,6 +311,21 @@ body {
   display: flex;
   justify-content: center;
   gap: 10px;
+  align-items: center;
+}
+
+.page-input {
+  width: 60px;
+  padding: 6px 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  text-align: center;
+  transition: border-color 0.3s;
+}
+
+.page-input:focus {
+  outline: none;
+  border-color: #66bb6a;
 }
 
 .login-container {
@@ -173,4 +343,57 @@ body {
 
 .error {
   color: #dc3545;
+}
+
+/* Modal 样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.modal h3 {
+  color: #66bb6a;
+  margin-bottom: 24px;
+}
+
+.modal-wide {
+  width: 800px;
+  max-width: 95%;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }

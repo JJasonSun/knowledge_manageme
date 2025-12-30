@@ -8,7 +8,7 @@
           <div class="permission-info">
             <small>💡 操作说明：只能编辑/删除自己创建的资源</small>
           </div>
-          <button class="btn btn-primary" @click="showCreateModal = true">+ 添加音频</button>
+          <button class="btn btn-add" @click="showCreateModal = true">+ 添加音频</button>
         </div>
       </div>
       
@@ -73,31 +73,6 @@ export default {
   padding: 30px;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.page-header h2 {
-  margin: 0;
-  color: #333;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.permission-info {
-  color: #666;
-  background-color: #fff3cd;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid #ffc107;
-}
 
 .search-box {
   margin-bottom: 30px;
@@ -114,28 +89,9 @@ export default {
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #66bb6a;
 }
 
-.btn {
-  padding: 10px 20px;
-  font-size: 1rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
 
 .btn-small {
   padding: 6px 12px;
@@ -157,7 +113,6 @@ export default {
   padding: 60px 20px;
   background-color: #f9f9f9;
   border-radius: 12px;
-  border: 2px dashed #ddd;
 }
 
 .placeholder-icon {

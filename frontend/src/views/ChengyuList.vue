@@ -8,7 +8,7 @@
           <div class="permission-info">
             <small>💡 操作说明：只能编辑/删除自己创建的资源</small>
           </div>
-          <button class="btn btn-primary" @click="showCreateModal = true">+ 添加成语</button>
+          <button class="btn btn-add" @click="showCreateModal = true">+ 添加成语</button>
         </div>
       </div>
       
@@ -18,7 +18,9 @@
           type="text" 
           class="search-input"
           placeholder="搜索成语..."
+          @keyup.enter="handleSearch"
         >
+        <button class="btn btn-primary" @click="handleSearch" :disabled="loading">搜索</button>
       </div>
       
       <table class="table" v-if="!loading && chengyuList.length > 0">
@@ -39,7 +41,7 @@
             <td>{{ item.emotion || '-' }}</td>
             <td class="text-ellipsis">{{ item.explanation }}</td>
             <td>
-              <span class="owner-pill" :class="getOwnerClass(item)">
+              <span class="status-pill owner-pill" :class="getOwnerClass(item)">
                 {{ getOwnerText(item.created_by) }}
               </span>
             </td>
@@ -150,6 +152,27 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from '../components/Header.vue'
+
+          .search-box {
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+          }
+
+          .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+          }
+
+          .search-input:focus {
+            outline: none;
+            border-color: #66bb6a;
+          }
 import request from '../utils/request'
 import { useAuthStore } from '../stores/auth'
 
@@ -171,7 +194,6 @@ export default {
     const showEditModal = ref(false)
     const submitting = ref(false)
     const editingId = ref(null)
-    const searchTimeout = ref(null)
     
     const formData = ref({
       chengyu: '',
@@ -205,22 +227,9 @@ export default {
     }
     
     const handleSearch = () => {
-      // 清除之前的定时器
-      if (searchTimeout.value) {
-        clearTimeout(searchTimeout.value)
-      }
-      
-      // 设置新的定时器，500ms 后执行搜索
-      searchTimeout.value = setTimeout(() => {
-        currentPage.value = 1
-        fetchChengyu()
-      }, 500)
+      currentPage.value = 1
+      fetchChengyu()
     }
-    
-    // 监听搜索框变化
-    watch(searchQuery, () => {
-      handleSearch()
-    })
     
     const goToPage = (page) => {
       if (page >= 1 && page <= totalPages.value) {
@@ -351,23 +360,12 @@ export default {
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.permission-info {
-  color: #666;
-  font-style: italic;
-}
 .text-ellipsis {
   max-width: 300px;
   white-space: nowrap;
@@ -378,17 +376,7 @@ export default {
   display: flex;
   gap: 8px;
 }
-.btn-small {
-  padding: 4px 12px;
-  font-size: 12px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-small:hover { background: #f5f5f5; }
-.btn-danger { color: #dc3545; border-color: #dc3545; }
-.btn-danger:hover { background: #dc3545; color: white; }
+
 .text-muted { color: #999; font-size: 12px; }
 .loading-text, .empty-text { text-align: center; padding: 40px; color: #666; }
 .page-info { padding: 0 15px; }
@@ -405,9 +393,10 @@ export default {
 .modal {
   background: white;
   padding: 30px;
-  border-radius: 12px;
+  border-radius: 16px;
   width: 500px;
   max-width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 .modal-wide {
@@ -427,7 +416,6 @@ export default {
   flex-direction: column;
   gap: 15px;
 }
-.modal h3 { margin-bottom: 20px; }
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -435,17 +423,9 @@ export default {
   margin-top: 20px;
 }
 
-.owner-pill--admin {
-  background-color: #fff3e0;
-  color: #e65100;
-  border-color: #ffb74d;
-}
 
-.owner-pill--system {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
-  border-color: #ce93d8;
-}
+
+
 
 .pagination {
   margin-top: 20px;
@@ -463,11 +443,4 @@ export default {
   margin: 0 15px;
 }
 
-.page-input {
-  width: 60px;
-  padding: 4px 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  text-align: center;
-}
 </style>

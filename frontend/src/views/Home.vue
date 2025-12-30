@@ -10,7 +10,7 @@
         <div class="search-wrapper">
           <!-- 第一级：选择模块 -->
           <select v-model="selectedModule" class="search-type-select" @change="handleModuleChange">
-            <option value="">选择模块</option>
+            <option value="">请先选择模块</option>
             <option value="hanzi">汉字模块</option>
             <option value="exam">题目模块</option>
             <option value="media">音视频模块</option>
@@ -18,7 +18,7 @@
           
           <!-- 第二级：选择具体类型 -->
           <select v-model="selectedType" class="search-subtype-select" :disabled="!selectedModule" @change="handleTypeChange">
-            <option value="">选择类型</option>
+            <option value="">请先选择类型</option>
             <!-- 汉字模块选项 -->
             <option v-if="selectedModule === 'hanzi'" value="zi">字</option>
             <option v-if="selectedModule === 'hanzi'" value="ciyu">词</option>
@@ -42,6 +42,7 @@
             type="text" 
             class="search-input-large"
             :placeholder="getSearchPlaceholder()"
+            :disabled="!selectedModule || !selectedType"
             @keyup.enter="handleSearch"
           >
           <button class="search-btn" @click="handleSearch" :disabled="!canSearch">
@@ -219,8 +220,8 @@
                 
                 <!-- 操作按钮 -->
                 <div class="result-actions" v-if="canModifyItem(item)">
-                  <button class="btn-small" @click="editItem(item)">编辑</button>
-                  <button class="btn-small btn-danger" @click="deleteItem(item)">删除</button>
+                  <button class="btn-small btn-header" @click="editItem(item)">编辑</button>
+                  <button class="btn-small btn-header btn-danger-header" @click="deleteItem(item)">删除</button>
                 </div>
               </div>
             </div>
@@ -472,29 +473,37 @@ export default {
 
 <style scoped>
 .home-container {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px;
 }
 
 .search-hero {
+  position: relative;
   text-align: center;
-  padding: 40px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  margin-bottom: 30px;
-  color: white;
+  padding: 48px 32px 40px;
+  margin-bottom: 32px;
+  color: #1f2a33;
+  background: radial-gradient(circle at 20% 20%, rgba(102, 187, 106, 0.08), transparent 45%),
+              radial-gradient(circle at 80% 0%, rgba(102, 187, 106, 0.06), transparent 40%),
+              #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(102, 187, 106, 0.12);
 }
 
 .search-title {
-  font-size: 32px;
-  margin-bottom: 10px;
+  font-size: 34px;
+  margin-bottom: 12px;
+  color: #1b5e20;
+  letter-spacing: 0.02em;
+  font-weight: 800;
 }
 
 .search-subtitle {
-  font-size: 16px;
-  opacity: 0.9;
-  margin-bottom: 30px;
+  font-size: 15px;
+  margin-bottom: 28px;
+  color: #4f5b62;
 }
 
 .search-wrapper {
@@ -502,39 +511,52 @@ export default {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  max-width: 700px;
+  max-width: 760px;
   margin: 0 auto;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  border: none;
 }
 
 .search-type-select,
 .search-subtype-select {
-  padding: 14px 20px;
+  padding: 12px 18px;
   font-size: 15px;
-  border: 2px solid white;
-  border-radius: 8px;
+  border: 1px solid #d7e8dc;
+  border-radius: 999px;
   outline: none;
-  background: white;
+  background: #f7fbf8;
   cursor: pointer;
-  color: #333;
-  transition: all 0.3s;
+  color: #1f2a33;
+  transition: all 0.25s;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236b8a7a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px 8px;
+  padding-right: 48px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .search-type-select {
-  min-width: 130px;
+  min-width: 180px;
 }
 
 .search-subtype-select {
-  min-width: 150px;
-}
-
-.search-type-select:hover,
-.search-subtype-select:hover:not(:disabled) {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
 }
 
 .search-subtype-select:focus,
 .search-type-select:focus {
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5), 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 3px rgba(102, 187, 106, 0.15), 0 6px 18px rgba(0, 0, 0, 0.12);
+  border-color: #66bb6a;
 }
 
 .search-subtype-select:disabled {
@@ -546,56 +568,73 @@ export default {
 
 .search-input-large {
   flex: 1;
-  min-width: 200px;
-  padding: 14px 24px;
+  min-width: 220px;
+  padding: 14px 22px;
   font-size: 16px;
-  border: 2px solid white;
-  border-radius: 8px;
+  border: 1px solid #d7e8dc;
+  border-radius: 999px;
   outline: none;
-  background: white;
-  color: #333;
-  transition: all 0.3s;
+  background: #ffffff;
+  color: #1f2a33;
+  transition: all 0.25s;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-.search-input-large:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.search-input-large:hover:not(:disabled) {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  border-color: #66bb6a;
 }
 
-.search-input-large:focus {
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5), 0 4px 12px rgba(0, 0, 0, 0.15);
+.search-input-large:focus:not(:disabled) {
+  box-shadow: 0 0 0 3px rgba(102, 187, 106, 0.18), 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-color: #66bb6a;
+}
+
+.search-input-large:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f0f0f0;
+  border-color: #e0e0e0;
+  color: #999;
 }
 
 .search-input-large::placeholder {
   color: #999;
 }
 
+.search-input-large:disabled::placeholder {
+  color: #ccc;
+}
+
 .search-btn {
-  padding: 14px 40px;
+  padding: 14px 32px;
   font-size: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #667eea;
+  background: linear-gradient(135deg, #66bb6a 0%, #5ca660 100%);
+  color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 999px;
   cursor: pointer;
-  font-weight: bold;
-  transition: all 0.3s;
+  font-weight: 700;
+  transition: all 0.25s;
+  box-shadow: 0 10px 20px rgba(102, 187, 106, 0.25);
 }
 
 .search-btn:hover:not(:disabled) {
-  background: white;
-  color: #764ba2;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(102, 187, 106, 0.32);
 }
 
 .search-btn:active:not(:disabled) {
-  background: white;
-  color: #764ba2;
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(102, 187, 106, 0.24);
 }
 
 .search-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.6);
+  background: #dfe7e1;
+  color: #8da298;
+  box-shadow: none;
 }
 
 /* 三大模块展示区 */
@@ -613,7 +652,8 @@ export default {
   background: white;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e7f0ea;
 }
 
 .module-header {
@@ -637,8 +677,7 @@ export default {
 }
 
 .module-items {
-  display: grid;
-  gap: 12px;
+  display: block;
 }
 
 .module-group {
@@ -652,11 +691,9 @@ export default {
 .module-group-title {
   font-size: 14px;
   font-weight: bold;
-  color: #667eea;
-  margin-bottom: 12px;
-  padding: 6px 12px;
-  background: #f8f9fa;
+  color: #66bb6a;
   border-radius: 6px;
+  padding-bottom: 6px;
 }
 
 .module-group-items {
@@ -668,27 +705,41 @@ export default {
 .module-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 14px 16px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
-  border-radius: 10px;
+  background: linear-gradient(135deg, #f9fcfa 0%, #eef5f0 100%);
+  border-radius: 12px;
   text-decoration: none;
-  color: #333;
+  color: #263238;
+  border: 1px solid #e1ebe4;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .module-item:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%);
   color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(102, 187, 106, 0.25);
 }
 
 .module-item-icon {
-  font-size: 28px;
-  font-weight: bold;
-  color: #667eea;
+  font-size: 22px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(102, 187, 106, 0.12);
+  color: #2e7d32;
+  font-weight: 700;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .module-item:hover .module-item-icon {
   color: white;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .module-item-name {
@@ -699,6 +750,7 @@ export default {
 .module-item.small {
   justify-content: center;
   font-size: 14px;
+  padding: 12px 14px;
 }
 
 /* 搜索结果弹窗 */
@@ -841,8 +893,8 @@ export default {
 }
 
 .type-chengyu {
-  background: #e3f2fd;
-  color: #1565c0;
+  background: #e8f5e9;
+  color: #66bb6a;
 }
 
 .type-ciyu {
@@ -852,24 +904,24 @@ export default {
 
 .result-mine {
   padding: 2px 8px;
-  background: #fff3e0;
-  color: #e65100;
+  background: #e8f5e9;
+  color: #66bb6a;
   border-radius: 4px;
   font-size: 12px;
 }
 
 .result-admin {
   padding: 2px 8px;
-  background: #fff3e0;
-  color: #e65100;
+  background: #e8f5e9;
+  color: #66bb6a;
   border-radius: 4px;
   font-size: 12px;
 }
 
 .result-system {
   padding: 2px 8px;
-  background: #f3e5f5;
-  color: #7b1fa2;
+  background: #e8f5e9;
+  color: #888;
   border-radius: 4px;
   font-size: 12px;
 }
@@ -969,14 +1021,16 @@ export default {
 .btn-small {
   padding: 4px 12px;
   font-size: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #66bb6a;
   background: white;
+  color: #66bb6a;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .btn-small:hover {
-  background: #f5f5f5;
+  background: #66bb6a;
+  color: white;
 }
 
 .btn-danger {

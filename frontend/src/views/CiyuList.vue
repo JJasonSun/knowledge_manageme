@@ -8,7 +8,7 @@
           <div class="permission-info">
             <small>💡 操作说明：只能编辑/删除自己创建的资源</small>
           </div>
-          <button class="btn btn-primary" @click="showCreateModal = true">+ 添加词语</button>
+          <button class="btn btn-add" @click="showCreateModal = true">+ 添加词语</button>
         </div>
       </div>
       
@@ -18,7 +18,9 @@
           type="text" 
           class="search-input"
           placeholder="搜索词语..."
+          @keyup.enter="handleSearch"
         >
+        <button class="btn btn-primary" @click="handleSearch" :disabled="loading">搜索</button>
       </div>
       
       <table class="table" v-if="!loading && ciyuList.length > 0">
@@ -39,14 +41,14 @@
             <td>{{ item.pinyin }}</td>
             <td>{{ item.part_of_speech || '-' }}</td>
             <td>
-              <span v-if="item.is_common !== null" class="common-badge" :class="{ 'common': item.is_common }">
+              <span v-if="item.is_common !== null" class="status-pill common-badge" :class="item.is_common ? 'common' : 'rare'">
                 {{ item.is_common ? '常用' : '非常用' }}
               </span>
               <span v-else>-</span>
             </td>
             <td class="text-ellipsis">{{ item.definition }}</td>
             <td>
-              <span class="owner-pill" :class="getOwnerClass(item)">
+              <span class="status-pill owner-pill" :class="getOwnerClass(item)">
                 {{ getOwnerText(item.created_by) }}
               </span>
             </td>
@@ -175,7 +177,6 @@ export default {
     const showEditModal = ref(false)
     const submitting = ref(false)
     const editingId = ref(null)
-    const searchTimeout = ref(null)
     
     const formData = ref({
       word: '',
@@ -206,22 +207,9 @@ export default {
     }
     
     const handleSearch = () => {
-      // 清除之前的定时器
-      if (searchTimeout.value) {
-        clearTimeout(searchTimeout.value)
-      }
-      
-      // 设置新的定时器，500ms 后执行搜索
-      searchTimeout.value = setTimeout(() => {
-        currentPage.value = 1
-        fetchCiyu()
-      }, 500)
+      currentPage.value = 1
+      fetchCiyu()
     }
-    
-    // 监听搜索框变化
-    watch(searchQuery, () => {
-      handleSearch()
-    })
     
     const goToPage = (page) => {
       if (page >= 1 && page <= totalPages.value) {
@@ -349,23 +337,34 @@ export default {
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-.header-actions {
+.search-box {
+  margin-bottom: 24px;
   display: flex;
+  gap: 12px;
   align-items: center;
-  gap: 15px;
 }
 
-.permission-info {
-  color: #666;
-  font-style: italic;
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s;
 }
+
+.search-input:focus {
+  outline: none;
+  border-color: #66bb6a;
+}
+
+
 .text-ellipsis {
   max-width: 250px;
   white-space: nowrap;
@@ -376,17 +375,6 @@ export default {
   display: flex;
   gap: 8px;
 }
-.btn-small {
-  padding: 4px 12px;
-  font-size: 12px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-small:hover { background: #f5f5f5; }
-.btn-danger { color: #dc3545; border-color: #dc3545; }
-.btn-danger:hover { background: #dc3545; color: white; }
 .text-muted { color: #999; font-size: 12px; }
 .loading-text, .empty-text { text-align: center; padding: 40px; color: #666; }
 .page-info { padding: 0 15px; }
@@ -403,16 +391,16 @@ export default {
 .modal {
   background: white;
   padding: 30px;
-  border-radius: 12px;
+  border-radius: 16px;
   width: 500px;
   max-width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 .modal-wide {
   width: 800px;
   max-width: 95%;
 }
-
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -425,7 +413,6 @@ export default {
   flex-direction: column;
   gap: 15px;
 }
-.modal h3 { margin-bottom: 20px; }
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -433,30 +420,9 @@ export default {
   margin-top: 20px;
 }
 
-.common-badge {
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  background: #f5f5f5;
-  color: #666;
-}
 
-.common-badge.common {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
 
-.owner-pill--admin {
-  background-color: #fff3e0;
-  color: #e65100;
-  border-color: #ffb74d;
-}
 
-.owner-pill--system {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
-  border-color: #ce93d8;
-}
 
 .pagination {
   margin-top: 20px;
@@ -474,11 +440,4 @@ export default {
   margin: 0 15px;
 }
 
-.page-input {
-  width: 60px;
-  padding: 4px 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  text-align: center;
-}
 </style>
