@@ -510,6 +510,7 @@ export default {
   align-items: center;
   gap: 8px;
   margin: 0 15px;
+  color: #777;
 }
 
 /* 操作按钮样式 */

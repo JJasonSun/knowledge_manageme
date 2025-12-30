@@ -34,8 +34,9 @@
       
       <div style="margin-top: 20px; font-size: 12px; color: #666;">
         <p>测试账号:</p>
-        <p>管理员: admin / admin123</p>
-        <p>老师: teacher / teach123</p>
+        <p>管理员: admin / 123456</p>
+        <p>老师1: teacher1 / 123456</p>
+        <p>老师2: teacher2 / 123456</p>
       </div>
     </div>
   </div>

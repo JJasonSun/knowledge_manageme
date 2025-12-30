@@ -20,8 +20,8 @@
           <select v-model="selectedType" class="search-subtype-select" :disabled="!selectedModule" @change="handleTypeChange">
             <option value="">请先选择类型</option>
             <!-- 汉字模块选项 -->
-            <option v-if="selectedModule === 'hanzi'" value="zi">字</option>
-            <option v-if="selectedModule === 'hanzi'" value="ciyu">词</option>
+            <option v-if="selectedModule === 'hanzi'" value="zi">汉字</option>
+            <option v-if="selectedModule === 'hanzi'" value="ciyu">词语</option>
             <option v-if="selectedModule === 'hanzi'" value="chengyu">成语</option>
             <!-- 题目模块选项 -->
             <option v-if="selectedModule === 'exam'" value="hsk-listening">HSK听力题</option>

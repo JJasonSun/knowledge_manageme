@@ -4,7 +4,7 @@
 import sys
 import os
 from typing import Optional, Dict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jose import jwt
 from pydantic import BaseModel
 from fastapi import HTTPException, Depends, status
@@ -26,8 +26,9 @@ class SimpleUser(BaseModel):
 
 # 硬编码用户列表
 LOCAL_USERS = {
-    "admin": SimpleUser(id=1, username="admin", password="admin123", role="admin"),
-    "teacher": SimpleUser(id=2, username="teacher", password="teach123", role="teacher")
+    "admin": SimpleUser(id=1, username="admin", password="123456", role="admin"),
+    "teacher1": SimpleUser(id=2, username="teacher1", password="123456", role="teacher"),
+    "teacher2": SimpleUser(id=3, username="teacher2", password="123456", role="teacher")
 }
 
 
@@ -47,9 +48,9 @@ def get_user_by_username(username: str) -> Optional[SimpleUser]:
 def create_access_token(username: str, role: str, expires_delta: Optional[timedelta] = None) -> str:
     """创建JWT访问令牌"""
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     
     to_encode = {
         "sub": username,
@@ -139,11 +140,14 @@ if __name__ == "__main__":
     print("🔍 测试简单认证...")
     
     # 测试用户验证
-    user = authenticate_user("admin", "admin123")
+    user = authenticate_user("admin", "123456")
     print(f"✅ 管理员验证: {user.username if user else '失败'}")
     
-    user = authenticate_user("teacher", "teach123")
-    print(f"✅ 老师验证: {user.username if user else '失败'}")
+    user = authenticate_user("teacher1", "123456")
+    print(f"✅ 老师1验证: {user.username if user else '失败'}")
+    
+    user = authenticate_user("teacher2", "123456")
+    print(f"✅ 老师2验证: {user.username if user else '失败'}")
     
     user = authenticate_user("wrong", "wrong")
     print(f"❌ 错误用户验证: {user.username if user else '失败'}")

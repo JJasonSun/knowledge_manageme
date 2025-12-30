@@ -63,7 +63,7 @@ body {
   padding: 10px 20px;
   border: 1px solid #ddd;
   background: white;
-  color: #333;
+  color: #777;
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
@@ -132,7 +132,7 @@ body {
 .page-header h2 {
   margin: 0;
   font-size: 1.3rem;
-  color: #333;
+  color: #555;
 }
 
 .header-actions {
@@ -312,6 +312,7 @@ body {
   justify-content: center;
   gap: 10px;
   align-items: center;
+  color: #777;
 }
 
 .page-input {

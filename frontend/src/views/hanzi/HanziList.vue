@@ -3,7 +3,7 @@
     <Header />
     <div class="container">
       <div class="page-header">
-        <h2>字管理</h2>
+        <h2>汉字管理</h2>
         <div class="header-actions">
           <div class="permission-info">
             <small>💡 操作说明：只能编辑/删除自己创建的资源</small>
@@ -104,7 +104,7 @@ export default {
 }
 
 .placeholder-content h3 {
-  color: #333;
+  color: #555;
   margin-bottom: 10px;
   font-size: 1.8rem;
 }
@@ -127,6 +127,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  color: #777;
 }
 
 </style>

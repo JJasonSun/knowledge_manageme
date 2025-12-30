@@ -12,8 +12,8 @@
           汉字模块 <span class="dropdown-indicator"></span>
         </button>
         <div class="dropdown-menu" :class="{ show: activeDropdown === 'hanzi' }">
-          <router-link to="/hanzi/zi" class="dropdown-item">字</router-link>
-          <router-link to="/hanzi/ciyu" class="dropdown-item">词</router-link>
+          <router-link to="/hanzi/zi" class="dropdown-item">汉字</router-link>
+          <router-link to="/hanzi/ciyu" class="dropdown-item">词语</router-link>
           <router-link to="/hanzi/chengyu" class="dropdown-item">成语</router-link>
         </div>
       </div>
