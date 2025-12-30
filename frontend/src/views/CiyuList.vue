@@ -330,7 +330,13 @@ export default {
     const handleCreate = async () => {
       submitting.value = true
       try {
-        await request.post('/v1/ciyu', formData.value)
+        // 处理常用程度默认值：如果未选择，默认为非常用词
+        const submitData = { ...formData.value }
+        if (submitData.is_common === null) {
+          submitData.is_common = false
+        }
+        
+        await request.post('/v1/ciyu', submitData)
         alert('创建成功')
         closeModal()
         fetchCiyu()
