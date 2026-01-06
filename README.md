@@ -26,6 +26,7 @@
 ### 1. 环境准备
 
 确保已安装 `uv`。如果未安装，可以通过以下命令安装：
+
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
@@ -33,57 +34,63 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 ### 2. 后端配置与启动
 
 1. 进入后端目录：
+
    ```bash
    cd backend
    ```
-
 2. 创建虚拟环境并安装依赖：
+
    ```bash
    uv venv
    uv sync
    ```
-
 3. 激活虚拟环境并启动后端服务：
+
    ```bash
    # 方式一：使用 uv run（推荐）
-   uv run uvicorn app.main:app --reload --port 8000
-   
+   uv run uvicorn app.main:app --reload --port 8003
+
    # 方式二：激活虚拟环境后运行
    # Windows:
    .venv\Scripts\activate
-   uvicorn app.main:app --reload --port 8000
-   
+   uvicorn app.main:app --reload --port 8003
+
    # Linux/macOS:
    source .venv/bin/activate
-   uvicorn app.main:app --reload --port 8000
+   uvicorn app.main:app --reload --port 8003
    ```
 
    **重要提示**：
+
    - 确保在 `backend` 目录下运行命令
    - 如果遇到 "program not found" 错误，请确保已正确安装 uv 并且在正确的目录下
    - 首次运行会自动根据 `app/core/database.py` 中的逻辑初始化数据库表结构
-
 4. 验证后端启动成功：
-   - 访问 http://localhost:8000/docs 查看 API 文档
-   - 访问 http://localhost:8000/health 检查服务状态
+
+   - 访问 http://localhost:8003/docs 查看 API 文档
+   - 访问 http://localhost:8003/health 检查服务状态
 
 ### 3. 前端配置与启动
 
 1. 进入前端目录：
+
    ```bash
    cd frontend
    ```
 2. 安装依赖：
+
    ```bash
    npm install
    ```
 3. 启动开发服务器：
+
    ```bash
    npm run dev -- --port 3001
    ```
-   *前端默认代理配置会指向 `http://localhost:8000/api`。*
 
+   *前端默认代理配置会指向 `http://localhost:8000/api`。*
 4. (可选) 生产环境构建：
+
    ```bash
    npm run build
    ```
@@ -91,19 +98,23 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 ## 核心功能
 
 ### 模块架构
+
 系统已重构为三大核心模块，采用模块化设计：
 
 #### 1️⃣ 汉字模块
+
 - **字**：汉字管理（框架已搭建，待后端实现）
 - **词**：词语管理（支持增删改查，包含拼音、释义、例句等字段）
 - **成语**：成语管理（支持增删改查，包含拼音、释义、例句、出处等字段）
 
 #### 2️⃣ 题目模块
+
 - **HSK考试**：听力题、阅读题、书写题、写作题
 - **YCT考试**：听力题、阅读题、书写题、写作题
 - *注：框架已搭建，待后端实现数据*
 
 #### 3️⃣ 音视频资源模块
+
 - **音频资源**：音频资源管理（框架已搭建，待后端实现）
 - **视频资源**：视频资源管理（框架已搭建，待后端实现）
 
@@ -115,7 +126,7 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 - **智能搜索**: 首页支持二级级联搜索，先选择模块再选择子类型，支持模糊搜索。
 - **模块导航**: 顶部导航栏采用下拉菜单形式，各模块下显示子选项，方便快速访问。
 - **响应式设计**: 前端采用 Vue 3 开发，提供流畅的用户交互体验。
- - **统一UI**: 采用清爽绿色主题（#66bb6a 主色），模块按钮/搜索区一致的圆角与阴影。
+- **统一UI**: 采用清爽绿色主题（#66bb6a 主色），模块按钮/搜索区一致的圆角与阴影。
 
 ## 前端路由结构
 
@@ -137,12 +148,14 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 ```
 
 **路由重定向**：
+
 - `/chengyu` → `/hanzi/chengyu`（向后兼容）
 - `/ciyu` → `/hanzi/ciyu`（向后兼容）
 
 ## 项目结构更新
 
 ### 前端目录结构
+
 ```
 frontend/
 ├── src/
@@ -191,33 +204,38 @@ frontend/
 ### 后端启动问题
 
 1. **错误**: `Failed to spawn: uvicorn` 或 `program not found`
+
    - **解决方案**: 确保在 `backend` 目录下运行命令，并且已正确安装依赖
+
    ```bash
    cd backend
    uv sync  # 重新同步依赖
-   uv run uvicorn app.main:app --reload --port 8000
+   uv run uvicorn app.main:app --reload --port 8003
    ```
-
 2. **错误**: 数据库连接失败
+
    - **解决方案**: 检查 `backend/.env` 文件中的数据库配置
    - 确保 MySQL 服务正在运行
-
 3. **错误**: 端口被占用
+
    - **解决方案**: 更换端口或停止占用端口的进程
+
    ```bash
-   uv run uvicorn app.main:app --reload --port 8001  # 使用其他端口
+   uv run uvicorn app.main:app --reload --port 8000  # 使用其他端口
    ```
 
 ### 前端启动问题
 
 1. **错误**: `npm install` 失败
+
    - **解决方案**: 清除缓存后重新安装
+
    ```bash
    npm cache clean --force
    npm install
    ```
-
 2. **错误**: API 请求失败
+
    - **解决方案**: 确保后端服务已启动并运行在正确端口
    - 检查 `frontend/vite.config.js` 中的代理配置
 

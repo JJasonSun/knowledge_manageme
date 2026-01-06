@@ -149,3 +149,5 @@ jspm_packages/
 
 # DynamoDB Local files
 .dynamodb/
+
+部署指南.md
