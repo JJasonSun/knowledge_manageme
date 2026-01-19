@@ -109,9 +109,32 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 #### 2️⃣ 题目模块
 
-- **HSK考试**：听力题、阅读题、书写题、写作题
-- **YCT考试**：听力题、阅读题、书写题、写作题
-- *注：框架已搭建，待后端实现数据*
+基于数据库结构文档重构，分为两个独立系统：
+
+- **Content System（基础课程体系）**：
+  - 支持听、说、读、写四大技能分类
+  - 多种题型：听音选图、听音判断、朗读句子、阅读理解、填空题等
+  - 题目与单词关联，支持 HSK 等级标注
+  - 媒体资源管理（音频、视频、图片）
+  - 质检状态管理（待审、已通过、已驳回）
+  - 权限控制：只能编辑/删除自己创建的题目
+  
+- **Scenario System（AI 情境学习）**：
+  - AI 动态生成题目和课程内容
+  - 支持对话和文章两种课程类型
+  - 基于生成课程自动产出练习题
+  - 词汇包管理，关联课程与词汇
+  - 完整的生成任务追踪
+  - 支持题目重新生成
+
+**展示特色**：
+- 📊 卡片式布局，信息丰富直观
+- 🔗 完整展示关联数据（单词、课程、媒体、词汇）
+- 🎨 多维度筛选（技能分类、题型、难度、质检状态）
+- 📈 统计面板（题目总数、各技能分布）
+- 🤖 AI 生成标识和课程内容预览
+
+*注：当前使用 Mock 数据进行前端开发，待数据库配置完成后接入真实 API*
 
 #### 3️⃣ 音视频资源模块
 
@@ -135,14 +158,8 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 /hanzi/zi                     - 汉字管理
 /hanzi/ciyu                   - 词语管理
 /hanzi/chengyu                - 成语管理
-/exam/hsk/listening           - HSK听力题
-/exam/hsk/reading             - HSK阅读题
-/exam/hsk/writing             - HSK书写题
-/exam/hsk/essay               - HSK写作题
-/exam/yct/listening           - YCT听力题
-/exam/yct/reading             - YCT阅读题
-/exam/yct/writing             - YCT书写题
-/exam/yct/essay               - YCT写作题
+/exam/content-system          - Content System 题目管理
+/exam/scenario-system         - Scenario System AI生成题目
 /media/audio                   - 音频资源
 /media/video                   - 视频资源
 ```
@@ -160,9 +177,11 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 frontend/
 ├── src/
 │   ├── components/
-│   │   └── Header.vue              # 更新：添加三个模块下拉菜单
+│   │   └── Header.vue              # 更新：题目模块菜单简化
+│   ├── mock/
+│   │   └── exerciseData.js         # 新增：题目模块 Mock 数据
 │   ├── router/
-│   │   └── index.js                # 更新：新增13个路由
+│   │   └── index.js                # 更新：题目路由重构
 │   ├── stores/
 │   │   └── auth.js                 # 认证状态管理
 │   ├── utils/
@@ -172,24 +191,29 @@ frontend/
 │       ├── CiyuList.vue            # 词语管理列表
 │       ├── ChengyuList.vue         # 成语管理列表
 │       ├── hanzi/
-│       │   └── HanziList.vue       # 新增：汉字管理
+│       │   └── HanziList.vue       # 汉字管理
 │       ├── exam/
-│       │   ├── ExamTemplate.vue    # 新增：题目通用模板
-│       │   ├── HSKListening.vue    # 新增
-│       │   ├── HSKReading.vue      # 新增
-│       │   ├── HSKWriting.vue      # 新增
-│       │   ├── HSKEssay.vue        # 新增
-│       │   ├── YCTListening.vue    # 新增
-│       │   ├── YCTReading.vue      # 新增
-│       │   ├── YCTWriting.vue      # 新增
-│       │   └── YCTEssay.vue        # 新增
+│       │   ├── ContentSystemExercises.vue    # 新增：Content System 题目管理
+│       │   └── ScenarioSystemExercises.vue   # 新增：Scenario System AI题目
 │       └── media/
-│           ├── AudioList.vue       # 新增：音频资源
-│           └── VideoList.vue       # 新增：视频资源
+│           ├── AudioList.vue       # 音频资源
+│           └── VideoList.vue       # 视频资源
 ```
 
 ## 最近前端改进（UI/交互）
 
+### 题目模块重构（2024-01）
+- **架构调整**：删除旧的 HSK/YCT 分类，基于数据库结构文档重构为 Content System 和 Scenario System
+- **Mock 数据**：创建完整的符合数据库结构的模拟数据（`frontend/src/mock/exerciseData.js`）
+- **卡片式展示**：
+  - Content System：展示题目、关联单词、媒体资源、题目详情（选项、答案、解析）
+  - Scenario System：展示 AI 生成题目、来源课程、考察词汇、课程内容预览
+- **丰富的筛选功能**：技能分类、题型、难度、质检状态、来源课程等多维度筛选
+- **统计面板**：题目总数、各技能分布、生成课程数、词汇库数量
+- **关联数据展示**：完整展示单词信息、媒体资源、课程内容、词汇详情
+- **权限控制**：Content System 支持创建者权限判断，只能编辑/删除自己的题目
+
+### 通用改进
 - 顶部导航下拉指示改为折线型，悬停自动翻转，去掉倒三角。
 - 首页搜索区：二级级联选择 + 按钮/回车触发搜索，改为绿主题胶囊风格，大卡片背景与渐变点缀。
 - 列表页：创建者/常用程度标签统一为无边框圆角徽章，系统灰、其他淡黄，常用绿、非常用深灰；占位卡片去掉虚线边框。

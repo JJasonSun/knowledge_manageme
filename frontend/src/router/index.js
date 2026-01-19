@@ -48,54 +48,17 @@ const routes = [
     path: '/chengyu',
     redirect: '/hanzi/chengyu'
   },
-  // 题目模块路由 - HSK
+  // 题目模块路由
   {
-    path: '/exam/hsk/listening',
-    name: 'HSKListening',
-    component: () => import('../views/exam/HSKListening.vue'),
+    path: '/exam/content-system',
+    name: 'ContentSystemExercises',
+    component: () => import('../views/exam/ContentSystemExercises.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/exam/hsk/reading',
-    name: 'HSKReading',
-    component: () => import('../views/exam/HSKReading.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/exam/hsk/writing',
-    name: 'HSKWriting',
-    component: () => import('../views/exam/HSKWriting.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/exam/hsk/essay',
-    name: 'HSKEssay',
-    component: () => import('../views/exam/HSKEssay.vue'),
-    meta: { requiresAuth: true }
-  },
-  // 题目模块路由 - YCT
-  {
-    path: '/exam/yct/listening',
-    name: 'YCTListening',
-    component: () => import('../views/exam/YCTListening.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/exam/yct/reading',
-    name: 'YCTReading',
-    component: () => import('../views/exam/YCTReading.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/exam/yct/writing',
-    name: 'YCTWriting',
-    component: () => import('../views/exam/YCTWriting.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/exam/yct/essay',
-    name: 'YCTEssay',
-    component: () => import('../views/exam/YCTEssay.vue'),
+    path: '/exam/scenario-system',
+    name: 'ScenarioSystemExercises',
+    component: () => import('../views/exam/ScenarioSystemExercises.vue'),
     meta: { requiresAuth: true }
   },
   // 音视频模块路由

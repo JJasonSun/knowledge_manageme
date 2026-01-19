@@ -23,21 +23,9 @@
         <button class="nav-link dropdown-btn">
           题目模块 <span class="dropdown-indicator"></span>
         </button>
-        <div class="dropdown-menu dropdown-menu-large" :class="{ show: activeDropdown === 'exam' }">
-          <div class="dropdown-column">
-            <div class="dropdown-title">HSK</div>
-            <router-link to="/exam/hsk/listening" class="dropdown-item">听力题</router-link>
-            <router-link to="/exam/hsk/reading" class="dropdown-item">阅读题</router-link>
-            <router-link to="/exam/hsk/writing" class="dropdown-item">书写题</router-link>
-            <router-link to="/exam/hsk/essay" class="dropdown-item">写作题</router-link>
-          </div>
-          <div class="dropdown-column">
-            <div class="dropdown-title">YCT</div>
-            <router-link to="/exam/yct/listening" class="dropdown-item">听力题</router-link>
-            <router-link to="/exam/yct/reading" class="dropdown-item">阅读题</router-link>
-            <router-link to="/exam/yct/writing" class="dropdown-item">书写题</router-link>
-            <router-link to="/exam/yct/essay" class="dropdown-item">写作题</router-link>
-          </div>
+        <div class="dropdown-menu" :class="{ show: activeDropdown === 'exam' }">
+          <router-link to="/exam/content-system" class="dropdown-item">📚 Content System</router-link>
+          <router-link to="/exam/scenario-system" class="dropdown-item">🤖 Scenario System</router-link>
         </div>
       </div>
       
