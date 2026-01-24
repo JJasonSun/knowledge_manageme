@@ -48,7 +48,8 @@ def ensure_owner_columns():
     """确保成语与词语表包含 created_by 字段"""
     tables = [
         ("hanyuguoxue_chengyu", "created_by", "VARCHAR(128)"),
-        ("hanyuguoxue_ciyu", "created_by", "VARCHAR(128)")
+        ("hanyuguoxue_ciyu", "created_by", "VARCHAR(128)"),
+        ("hanyuguoxue_hanzi", "created_by", "VARCHAR(128)")
     ]
 
     try:

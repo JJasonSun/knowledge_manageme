@@ -21,6 +21,7 @@ class Hanzi(Base):
     guoyu_info = Column(JSON, nullable=True, comment="国语信息")
     liangan_info = Column(JSON, nullable=True, comment="两岸信息")
     evolution_data = Column(JSON, nullable=True, comment="演变数据")
+    created_by = Column(String(128), nullable=True, index=True, comment="创建者用户名")
     error = Column(Text, nullable=True, comment="错误信息")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), comment="更新时间")

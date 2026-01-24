@@ -11,12 +11,14 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.database import get_db, test_connection, ensure_owner_columns
+from app.core.database import get_db, test_connection, ensure_owner_columns, engine, Base
 from app.core.simple_auth import authenticate_user, create_access_token, verify_token, get_current_user
 from app.models.chengyu import Chengyu
 from app.models.ciyu import Ciyu
+from app.models.hanzi import Hanzi
 from app.schemas.chengyu import ChengyuResponse, ChengyuListResponse, ChengyuCreate, ChengyuUpdate
 from app.schemas.ciyu import CiyuResponse, CiyuListResponse, CiyuCreate, CiyuUpdate
+from app.schemas.hanzi import HanziResponse, HanziListResponse, HanziCreate, HanziUpdate
 from app.schemas.common import APIResponse, PaginatedResponse, SearchParams
 from app.schemas.user import UserLogin, UserResponse, Token
 
@@ -73,9 +75,11 @@ async def check_existing_data(db: Session = Depends(get_db)):
     try:
         chengyu_count = db.query(Chengyu).count()
         ciyu_count = db.query(Ciyu).count()
+        hanzi_count = db.query(Hanzi).count()
         return {
             'chengyu_count': chengyu_count,
-            'ciyu_count': ciyu_count
+            'ciyu_count': ciyu_count,
+            'hanzi_count': hanzi_count
         }
     except Exception as e:
         return {'error': str(e)}
@@ -438,12 +442,180 @@ async def delete_ciyu(
         logger.error(f"删除词语失败: {e}")
         raise HTTPException(status_code=500, detail="删除词语失败")
 
+# 汉字相关接口
+@app.get("/api/v1/hanzi")
+async def get_hanzi_list(
+    page: int = 1,
+    size: int = 20,
+    search: Optional[str] = None,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """获取汉字列表（根据用户权限过滤）"""
+    try:
+        query = db.query(Hanzi)
+        
+        # 老师只能看到公共资源（包括管理员创建的）和自己创建的
+        if current_user.role == "teacher":
+            query = query.filter(
+                or_(
+                    Hanzi.created_by == None,
+                    Hanzi.created_by == "",
+                    Hanzi.created_by == "system",
+                    Hanzi.created_by == "admin",
+                    Hanzi.created_by == current_user.username
+                )
+            )
+        
+        # 搜索过滤 - 只根据汉字内容进行匹配
+        if search:
+            query = query.filter(Hanzi.character.like(f"%{search}%"))
+        
+        # 分页 - 使用降序排序显示最新内容
+        total = query.count()
+        offset = (page - 1) * size
+        hanzi_list = query.order_by(Hanzi.id.desc()).offset(offset).limit(size).all()
+        
+        # 构建返回数据
+        items = []
+        for hanzi in hanzi_list:
+            item_dict = {
+                'id': hanzi.id,
+                'character': hanzi.character,
+                'url': hanzi.url,
+                'unicode_decimal': hanzi.unicode_decimal,
+                'basic_info': hanzi.basic_info,
+                'gaishu_info': hanzi.gaishu_info,
+                'yisi_info': hanzi.yisi_info,
+                'fanyi_info': hanzi.fanyi_info,
+                'guoyu_info': hanzi.guoyu_info,
+                'liangan_info': hanzi.liangan_info,
+                'evolution_data': hanzi.evolution_data,
+                'created_by': hanzi.created_by,
+                'created_at': hanzi.created_at,
+                'updated_at': hanzi.updated_at
+            }
+            items.append(item_dict)
+        
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "size": size,
+            "pages": (total + size - 1) // size
+        }
+    except Exception as e:
+        logger.error(f"获取汉字列表失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="获取汉字列表失败")
+
+@app.get("/api/v1/hanzi/{hanzi_id}", response_model=HanziResponse)
+async def get_hanzi(hanzi_id: int, db: Session = Depends(get_db)):
+    """获取单个汉字详情"""
+    hanzi = db.query(Hanzi).filter(Hanzi.id == hanzi_id).first()
+    if not hanzi:
+        raise HTTPException(status_code=404, detail="汉字不存在")
+    return HanziResponse.from_orm(hanzi)
+
+@app.post("/api/v1/hanzi", response_model=HanziResponse)
+async def create_hanzi(
+    hanzi_data: HanziCreate,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """创建新汉字（仅管理员和老师）"""
+    if current_user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="权限不足")
+    
+    try:
+        hanzi = Hanzi(**hanzi_data.dict(), created_by=current_user.username)
+        db.add(hanzi)
+        db.commit()
+        db.refresh(hanzi)
+        logger.info(f"用户 {current_user.username} 创建了汉字: {hanzi.character}")
+        return HanziResponse.from_orm(hanzi)
+    except Exception as e:
+        db.rollback()
+        error_msg = str(e)
+        logger.error(f"创建汉字失败: {error_msg}")
+        
+        # 检查是否是重复错误
+        if "Duplicate entry" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="该汉字已存在"
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="创建汉字失败"
+            )
+
+
+@app.put("/api/v1/hanzi/{hanzi_id}", response_model=HanziResponse)
+async def update_hanzi(
+    hanzi_id: int,
+    hanzi_data: HanziUpdate,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    hanzi = db.query(Hanzi).filter(Hanzi.id == hanzi_id).first()
+    if not hanzi:
+        raise HTTPException(status_code=404, detail="汉字不存在")
+
+    ensure_owner_or_admin(hanzi, current_user)
+
+    payload = hanzi_data.dict(exclude_unset=True)
+    if not payload:
+        raise HTTPException(status_code=400, detail="没有更新字段")
+
+    try:
+        for key, value in payload.items():
+            setattr(hanzi, key, value)
+        db.commit()
+        db.refresh(hanzi)
+        logger.info(f"用户 {current_user.username} 更新了汉字: {hanzi.character}")
+        return HanziResponse.from_orm(hanzi)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"更新汉字失败: {e}")
+        raise HTTPException(status_code=500, detail="更新汉字失败")
+
+
+@app.delete("/api/v1/hanzi/{hanzi_id}")
+async def delete_hanzi(
+    hanzi_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    hanzi = db.query(Hanzi).filter(Hanzi.id == hanzi_id).first()
+    if not hanzi:
+        raise HTTPException(status_code=404, detail="汉字不存在")
+
+    ensure_owner_or_admin(hanzi, current_user)
+
+    try:
+        db.delete(hanzi)
+        db.commit()
+        logger.info(f"用户 {current_user.username} 删除了汉字: {hanzi.character}")
+        return APIResponse(success=True, message="汉字已删除")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"删除汉字失败: {e}")
+        raise HTTPException(status_code=500, detail="删除汉字失败")
+
 # 启动事件
 @app.on_event("startup")
 async def startup_event():
     """应用启动事件"""
     print("正在启动中文教育资源管理系统...")
     
+    # 创建数据库表
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("数据库表结构已确认")
+    except Exception as e:
+        print(f"创建数据库表失败: {e}")
+
     # 确保 created_by 字段存在
     if ensure_owner_columns():
         print("created_by 字段已准备就绪")
