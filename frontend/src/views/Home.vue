@@ -11,7 +11,7 @@
           <!-- 第一级：选择模块 -->
           <select v-model="selectedModule" class="search-type-select" @change="handleModuleChange">
             <option value="">请先选择模块</option>
-            <option value="hanzi">汉字模块</option>
+            <option value="hanzi">基础知识</option>
             <option value="exam">题目模块</option>
             <option value="media">音视频模块</option>
           </select>
@@ -19,19 +19,13 @@
           <!-- 第二级：选择具体类型 -->
           <select v-model="selectedType" class="search-subtype-select" :disabled="!selectedModule" @change="handleTypeChange">
             <option value="">请先选择类型</option>
-            <!-- 汉字模块选项 -->
+            <!-- 基础知识选项 -->
             <option v-if="selectedModule === 'hanzi'" value="zi">汉字</option>
             <option v-if="selectedModule === 'hanzi'" value="ciyu">词语</option>
             <option v-if="selectedModule === 'hanzi'" value="chengyu">成语</option>
             <!-- 题目模块选项 -->
-            <option v-if="selectedModule === 'exam'" value="hsk-listening">HSK听力题</option>
-            <option v-if="selectedModule === 'exam'" value="hsk-reading">HSK阅读题</option>
-            <option v-if="selectedModule === 'exam'" value="hsk-writing">HSK书写题</option>
-            <option v-if="selectedModule === 'exam'" value="hsk-essay">HSK写作题</option>
-            <option v-if="selectedModule === 'exam'" value="yct-listening">YCT听力题</option>
-            <option v-if="selectedModule === 'exam'" value="yct-reading">YCT阅读题</option>
-            <option v-if="selectedModule === 'exam'" value="yct-writing">YCT书写题</option>
-            <option v-if="selectedModule === 'exam'" value="yct-essay">YCT写作题</option>
+            <option v-if="selectedModule === 'exam'" value="content-system">📚 Content System</option>
+            <option v-if="selectedModule === 'exam'" value="scenario-system">🤖 Scenario System</option>
             <!-- 音视频模块选项 -->
             <option v-if="selectedModule === 'media'" value="audio">音频</option>
             <option v-if="selectedModule === 'media'" value="video">视频</option>
@@ -53,11 +47,11 @@
 
       <!-- 三大模块展示 -->
       <div class="modules-section">
-        <!-- 汉字模块 -->
+        <!-- 基础知识 -->
         <div class="module-card">
           <div class="module-header">
             <div class="module-icon">📝</div>
-            <h3 class="module-title">汉字模块</h3>
+            <h3 class="module-title">基础知识</h3>
           </div>
           <div class="module-items">
             <div class="module-group-items">
@@ -75,23 +69,9 @@
             <h3 class="module-title">题目模块</h3>
           </div>
           <div class="module-items">
-            <div class="module-group">
-              <div class="module-group-title">HSK</div>
-              <div class="module-group-items">
-                <router-link to="/exam/hsk/listening" class="module-item small">听力题</router-link>
-                <router-link to="/exam/hsk/reading" class="module-item small">阅读题</router-link>
-                <router-link to="/exam/hsk/writing" class="module-item small">书写题</router-link>
-                <router-link to="/exam/hsk/essay" class="module-item small">写作题</router-link>
-              </div>
-            </div>
-            <div class="module-group">
-              <div class="module-group-title">YCT</div>
-              <div class="module-group-items">
-                <router-link to="/exam/yct/listening" class="module-item small">听力题</router-link>
-                <router-link to="/exam/yct/reading" class="module-item small">阅读题</router-link>
-                <router-link to="/exam/yct/writing" class="module-item small">书写题</router-link>
-                <router-link to="/exam/yct/essay" class="module-item small">写作题</router-link>
-              </div>
+            <div class="module-group-items">
+              <router-link to="/exam/content-system" class="module-item small">📚 Content System</router-link>
+              <router-link to="/exam/scenario-system" class="module-item small">🤖 Scenario System</router-link>
             </div>
           </div>
         </div>
@@ -178,10 +158,30 @@
                     <span class="label">常用程度：</span>{{ item.is_common ? '常用词' : '非常用词' }}
                   </div>
                 </div>
+
+                <!-- 题目特有字段 -->
+                <div v-if="item.type === 'content-system' || item.type === 'scenario-system'" class="result-details">
+                  <div class="detail-item">
+                    <span class="label">难度：</span>
+                    <span v-for="n in item.difficulty" :key="n" style="color: #ff9800;">★</span>
+                  </div>
+                  <div v-if="item.status !== undefined" class="detail-item">
+                    <span class="label">状态：</span>{{ item.status === 1 ? '已发布' : '草稿' }}
+                  </div>
+                  <!-- 选项展示 -->
+                  <div v-if="item.options" class="detail-item" style="margin-top: 8px;">
+                    <span class="label">选项：</span>
+                    <div style="margin-left: 10px; font-size: 0.9em; color: #666;">
+                      <div v-for="opt in item.options" :key="opt.key || opt">
+                        {{ typeof opt === 'string' ? opt : `${opt.key}. ${opt.text}` }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 
                 <!-- 定义/解释 -->
                 <div class="result-definition">
-                  <span class="label">{{ item.type === 'chengyu' ? '解释：' : '定义：' }}</span>
+                  <span class="label">{{ item.type === 'chengyu' ? '解释：' : (item.type === 'zi' ? '释义：' : '详情：') }}</span>
                   {{ item.definition }}
                 </div>
                 
@@ -238,6 +238,7 @@ import Header from '../components/Header.vue'
 import request from '../utils/request'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
+import { contentSystemMock, scenarioSystemMock } from '../mock/exerciseData'
 
 export default {
   name: 'Home',
@@ -274,14 +275,8 @@ export default {
         'zi': '输入汉字进行搜索...',
         'ciyu': '输入词语进行搜索...',
         'chengyu': '输入成语进行搜索...',
-        'hsk-listening': '输入关键词搜索HSK听力题...',
-        'hsk-reading': '输入关键词搜索HSK阅读题...',
-        'hsk-writing': '输入关键词搜索HSK书写题...',
-        'hsk-essay': '输入关键词搜索HSK写作题...',
-        'yct-listening': '输入关键词搜索YCT听力题...',
-        'yct-reading': '输入关键词搜索YCT阅读题...',
-        'yct-writing': '输入关键词搜索YCT书写题...',
-        'yct-essay': '输入关键词搜索YCT写作题...',
+        'content-system': '输入关键词搜索Content System题目...',
+        'scenario-system': '输入关键词搜索Scenario System题目...',
         'audio': '输入关键词搜索音频资源...',
         'video': '输入关键词搜索视频资源...'
       }
@@ -359,11 +354,74 @@ export default {
             console.error('搜索词语失败:', error)
           }
         } else if (selectedType.value === 'zi') {
-          // 汉字搜索 - 待实现
-          console.log('汉字搜索功能待实现')
-        } else if (selectedType.value.startsWith('hsk-') || selectedType.value.startsWith('yct-')) {
-          // 题目搜索 - 待实现
-          console.log('题目搜索功能待实现')
+          try {
+            const hanziRes = await request.get('/v1/hanzi', { 
+              params: { search: searchQuery.value, size: 50 } 
+            })
+            if (hanziRes.data.items) {
+              hanziRes.data.items.forEach(item => {
+                results.push({
+                  id: item.id,
+                  type: 'zi',
+                  word: item.character,
+                  pinyin: item.basic_info?.pinyin || '',
+                  unicode: item.unicode_decimal,
+                  definition: item.yisi_info?.meanings?.join('; ') || '暂无释义',
+                  url: item.url,
+                  created_by: item.created_by
+                })
+              })
+            }
+          } catch (error) {
+            console.error('搜索汉字失败:', error)
+          }
+        } else if (selectedType.value === 'content-system') {
+          // 搜索 Content System 题目 (Mock)
+          const keyword = searchQuery.value.toLowerCase()
+          const matchedExercises = contentSystemMock.exercises.filter(ex => 
+            ex.prompt.toLowerCase().includes(keyword) || 
+            (ex.metadata.options && ex.metadata.options.some(opt => opt.text && opt.text.toLowerCase().includes(keyword)))
+          )
+          
+          matchedExercises.forEach(ex => {
+            const typeInfo = contentSystemMock.exerciseTypes.find(t => t.id === ex.exercise_type_id)
+            results.push({
+              id: ex.id,
+              type: 'content-system',
+              word: ex.prompt, // 使用 prompt 作为主要显示文本
+              definition: `题型: ${typeInfo?.display_name || '未知'}`,
+              difficulty: ex.difficulty_level,
+              status: ex.quality_status,
+              created_by: ex.created_by,
+              // 额外字段
+              exerciseType: typeInfo?.display_name,
+              options: ex.metadata.options
+            })
+          })
+        } else if (selectedType.value === 'scenario-system') {
+          // 搜索 Scenario System 题目 (Mock)
+          const keyword = searchQuery.value.toLowerCase()
+          const matchedExercises = scenarioSystemMock.slExercises.filter(ex => 
+            (ex.metadata.question && ex.metadata.question.toLowerCase().includes(keyword)) ||
+            (ex.metadata.prompt && ex.metadata.prompt.toLowerCase().includes(keyword))
+          )
+          
+          matchedExercises.forEach(ex => {
+            const typeInfo = scenarioSystemMock.slExerciseTypes.find(t => t.id === ex.exercise_type_id)
+            const lesson = scenarioSystemMock.generatedLessons.find(l => l.lesson_db_id === ex.source_lesson_db_id)
+            
+            results.push({
+              id: ex.id,
+              type: 'scenario-system',
+              word: ex.metadata.question || ex.metadata.prompt, // 使用问题或提示作为主要显示文本
+              definition: `题型: ${typeInfo?.name || '未知'} | 来源: ${lesson?.lesson_name || '未知'}`,
+              difficulty: ex.difficulty_level,
+              created_by: ex.created_by,
+              // 额外字段
+              exerciseType: typeInfo?.name,
+              sourceLesson: lesson?.lesson_name
+            })
+          })
         } else if (selectedType.value === 'audio' || selectedType.value === 'video') {
           // 音视频搜索 - 待实现
           console.log('音视频搜索功能待实现')
@@ -391,14 +449,8 @@ export default {
         'zi': '字',
         'ciyu': '词',
         'chengyu': '成语',
-        'hsk-listening': 'HSK听力题',
-        'hsk-reading': 'HSK阅读题',
-        'hsk-writing': 'HSK书写题',
-        'hsk-essay': 'HSK写作题',
-        'yct-listening': 'YCT听力题',
-        'yct-reading': 'YCT阅读题',
-        'yct-writing': 'YCT书写题',
-        'yct-essay': 'YCT写作题',
+        'content-system': 'Content System',
+        'scenario-system': 'Scenario System',
         'audio': '音频',
         'video': '视频'
       }

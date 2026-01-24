@@ -628,8 +628,8 @@ async def startup_event():
     else:
         print("警告: 数据库连接失败")
     
-    print(f"应用启动完成，访问地址: http://localhost:8000")
-    print(f"API文档地址: http://localhost:8000/docs")
+    print(f"应用启动完成，访问地址: http://localhost:8003")
+    print(f"API文档地址: http://localhost:8003/docs")
     logger.info("中文教育资源管理系统启动")
 
 @app.on_event("shutdown")
@@ -643,6 +643,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
-        port=8000,
+        port=8003,
         reload=True
     )

@@ -88,7 +88,7 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
    npm run dev -- --port 3001
    ```
 
-   *前端默认代理配置会指向 `http://localhost:8000/api`。*
+   *前端默认代理配置会指向 `http://localhost:8003/api`。*
 4. (可选) 生产环境构建：
 
    ```bash

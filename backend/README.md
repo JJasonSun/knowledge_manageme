@@ -151,7 +151,7 @@ uv sync
 
 ## API 文档
 
-启动服务后，访问 http://localhost:8000/docs 查看完整的 API 文档。
+启动服务后，访问 http://localhost:8003/docs 查看完整的 API 文档。
 
 主要 API 端点：
 - `POST /api/v1/auth/login` - 用户登录
