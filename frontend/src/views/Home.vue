@@ -11,7 +11,7 @@
           <!-- 第一级：选择模块 -->
           <select v-model="selectedModule" class="search-type-select" @change="handleModuleChange">
             <option value="">请先选择模块</option>
-            <option value="hanzi">基础知识</option>
+            <option value="basic">基础知识</option>
             <option value="exam">题目模块</option>
             <option value="media">音视频模块</option>
           </select>
@@ -20,9 +20,9 @@
           <select v-model="selectedType" class="search-subtype-select" :disabled="!selectedModule" @change="handleTypeChange">
             <option value="">请先选择类型</option>
             <!-- 基础知识选项 -->
-            <option v-if="selectedModule === 'hanzi'" value="zi">汉字</option>
-            <option v-if="selectedModule === 'hanzi'" value="ciyu">词语</option>
-            <option v-if="selectedModule === 'hanzi'" value="chengyu">成语</option>
+            <option v-if="selectedModule === 'basic'" value="zi">汉字</option>
+            <option v-if="selectedModule === 'basic'" value="ciyu">词语</option>
+            <option v-if="selectedModule === 'basic'" value="chengyu">成语</option>
             <!-- 题目模块选项 -->
             <option v-if="selectedModule === 'exam'" value="content-system">📚 Content System</option>
             <option v-if="selectedModule === 'exam'" value="scenario-system">🤖 Scenario System</option>
@@ -55,9 +55,9 @@
           </div>
           <div class="module-items">
             <div class="module-group-items">
-              <router-link to="/hanzi/zi" class="module-item small">汉字管理</router-link>
-              <router-link to="/hanzi/ciyu" class="module-item small">词语管理</router-link>
-              <router-link to="/hanzi/chengyu" class="module-item small">成语管理</router-link>
+              <router-link to="/basic/zi" class="module-item small">汉字管理</router-link>
+              <router-link to="/basic/ciyu" class="module-item small">词语管理</router-link>
+              <router-link to="/basic/chengyu" class="module-item small">成语管理</router-link>
             </div>
           </div>
         </div>
@@ -439,7 +439,7 @@ export default {
 
     const quickSearch = (keyword, type = 'chengyu') => {
       searchQuery.value = keyword
-      selectedModule.value = 'hanzi'
+      selectedModule.value = 'basic'
       selectedType.value = type
       handleSearch()
     }

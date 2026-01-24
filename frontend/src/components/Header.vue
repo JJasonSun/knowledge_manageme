@@ -6,15 +6,15 @@
       <!-- 首页 -->
       <router-link to="/home" class="nav-link">首页</router-link>
       
-      <!-- 汉字模块下拉菜单 -->
-      <div class="dropdown" :class="{ open: activeDropdown === 'hanzi' }" @mouseenter="showDropdown('hanzi')" @mouseleave="hideDropdown">
+      <!-- 基础知识模块下拉菜单 -->
+      <div class="dropdown" :class="{ open: activeDropdown === 'basic' }" @mouseenter="showDropdown('basic')" @mouseleave="hideDropdown">
         <button class="nav-link dropdown-btn">
-          汉字模块 <span class="dropdown-indicator"></span>
+          基础知识 <span class="dropdown-indicator"></span>
         </button>
-        <div class="dropdown-menu" :class="{ show: activeDropdown === 'hanzi' }">
-          <router-link to="/hanzi/zi" class="dropdown-item">汉字</router-link>
-          <router-link to="/hanzi/ciyu" class="dropdown-item">词语</router-link>
-          <router-link to="/hanzi/chengyu" class="dropdown-item">成语</router-link>
+        <div class="dropdown-menu" :class="{ show: activeDropdown === 'basic' }">
+          <router-link to="/basic/zi" class="dropdown-item">汉字</router-link>
+          <router-link to="/basic/ciyu" class="dropdown-item">词语</router-link>
+          <router-link to="/basic/chengyu" class="dropdown-item">成语</router-link>
         </div>
       </div>
       

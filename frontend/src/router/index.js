@@ -21,33 +21,36 @@ const routes = [
     path: '/main',
     redirect: '/home'
   },
-  // 汉字模块路由
+  // 基础知识模块路由
   {
-    path: '/hanzi/zi',
+    path: '/basic/zi',
     name: 'HanziList',
-    component: () => import('../views/hanzi/HanziList.vue'),
+    component: () => import('../views/basic/HanziList.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/hanzi/ciyu',
+    path: '/basic/ciyu',
     name: 'CiyuList',
-    component: () => import('../views/CiyuList.vue'),
+    component: () => import('../views/basic/CiyuList.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/ciyu',
-    redirect: '/hanzi/ciyu'
+    redirect: '/basic/ciyu'
   },
+
   {
-    path: '/hanzi/chengyu',
+    path: '/basic/chengyu',
     name: 'ChengyuList',
-    component: () => import('../views/ChengyuList.vue'),
+    component: () => import('../views/basic/ChengyuList.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/chengyu',
-    redirect: '/hanzi/chengyu'
+    redirect: '/basic/chengyu'
   },
+
+
   // 题目模块路由
   {
     path: '/exam/content-system',

@@ -3,12 +3,12 @@
     <Header />
     <div class="container">
       <div class="page-header">
-        <h2>成语管理</h2>
+        <h2>词语管理</h2>
         <div class="header-actions">
           <div class="permission-info">
             <small>💡 操作说明：只能编辑/删除自己创建的资源</small>
           </div>
-          <button class="btn btn-add" @click="showCreateModal = true">+ 添加成语</button>
+          <button class="btn btn-add" @click="showCreateModal = true">+ 添加词语</button>
         </div>
       </div>
       
@@ -17,29 +17,36 @@
           v-model="searchQuery" 
           type="text" 
           class="search-input"
-          placeholder="搜索成语..."
+          placeholder="搜索词语..."
           @keyup.enter="handleSearch"
         >
         <button class="btn btn-primary" @click="handleSearch" :disabled="loading">搜索</button>
       </div>
       
-      <table class="table" v-if="!loading && chengyuList.length > 0">
+      <table class="table" v-if="!loading && ciyuList.length > 0">
         <thead>
           <tr>
-            <th>成语</th>
+            <th>词语</th>
             <th>拼音</th>
-            <th>情感色彩</th>
-            <th>解释</th>
+            <th>词性</th>
+            <th>常用程度</th>
+            <th>定义</th>
             <th>创建者</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in chengyuList" :key="item.id">
-            <td>{{ item.chengyu }}</td>
+          <tr v-for="item in ciyuList" :key="item.id">
+            <td>{{ item.word }}</td>
             <td>{{ item.pinyin }}</td>
-            <td>{{ item.emotion || '-' }}</td>
-            <td class="text-ellipsis">{{ item.explanation }}</td>
+            <td>{{ item.part_of_speech || '-' }}</td>
+            <td>
+              <span v-if="item.is_common !== null" class="status-pill common-badge" :class="item.is_common ? 'common' : 'rare'">
+                {{ item.is_common ? '常用' : '非常用' }}
+              </span>
+              <span v-else>-</span>
+            </td>
+            <td class="text-ellipsis">{{ item.definition }}</td>
             <td>
               <span class="status-pill owner-pill" :class="getOwnerClass(item)">
                 {{ getOwnerText(item.created_by) }}
@@ -57,7 +64,7 @@
       </table>
       
       <div v-if="loading" class="loading-text">加载中...</div>
-      <div v-if="!loading && chengyuList.length === 0" class="empty-text">暂无数据</div>
+      <div v-if="!loading && ciyuList.length === 0" class="empty-text">暂无数据</div>
       
       <div class="pagination" v-if="totalPages > 1">
         <button class="btn" @click="goToPage(1)" :disabled="currentPage <= 1">首页</button>
@@ -85,13 +92,13 @@
     <!-- 创建/编辑弹窗 -->
     <div v-if="showCreateModal || showEditModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal modal-wide">
-        <h3>{{ showEditModal ? '编辑成语' : '添加成语' }}</h3>
+        <h3>{{ showEditModal ? '编辑词语' : '添加词语' }}</h3>
         <form @submit.prevent="showEditModal ? handleUpdate() : handleCreate()">
           <div class="form-grid">
             <div class="form-column">
               <div class="form-group">
-                <label class="form-label">成语 *</label>
-                <input v-model="formData.chengyu" type="text" class="form-input" required :disabled="showEditModal">
+                <label class="form-label">词语 *</label>
+                <input v-model="formData.word" type="text" class="form-input" required :disabled="showEditModal">
               </div>
               <div class="form-group">
                 <label class="form-label">拼音</label>
@@ -102,36 +109,33 @@
                 <input v-model="formData.zhuyin" type="text" class="form-input">
               </div>
               <div class="form-group">
-                <label class="form-label">情感色彩</label>
-                <select v-model="formData.emotion" class="form-input">
+                <label class="form-label">词性</label>
+                <select v-model="formData.part_of_speech" class="form-input">
                   <option value="">请选择</option>
-                  <option value="褒义">褒义</option>
-                  <option value="贬义">贬义</option>
-                  <option value="中性">中性</option>
+                  <option value="名词">名词</option>
+                  <option value="动词">动词</option>
+                  <option value="形容词">形容词</option>
+                  <option value="副词">副词</option>
+                  <option value="介词">介词</option>
+                  <option value="连词">连词</option>
+                  <option value="助词">助词</option>
+                  <option value="叹词">叹词</option>
                 </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">翻译</label>
-                <textarea v-model="formData.translation" class="form-input" rows="2"></textarea>
               </div>
             </div>
             
             <div class="form-column">
               <div class="form-group">
-                <label class="form-label">解释</label>
-                <textarea v-model="formData.explanation" class="form-input" rows="3"></textarea>
+                <label class="form-label">是否常用词</label>
+                <select v-model="formData.is_common" class="form-input">
+                  <option :value="null">请选择</option>
+                  <option :value="true">常用词</option>
+                  <option :value="false">非常用词</option>
+                </select>
               </div>
               <div class="form-group">
-                <label class="form-label">来源</label>
-                <textarea v-model="formData.source" class="form-input" rows="2"></textarea>
-              </div>
-              <div class="form-group">
-                <label class="form-label">用法</label>
-                <textarea v-model="formData.usage" class="form-input" rows="2"></textarea>
-              </div>
-              <div class="form-group">
-                <label class="form-label">例句</label>
-                <textarea v-model="formData.example" class="form-input" rows="2"></textarea>
+                <label class="form-label">定义</label>
+                <textarea v-model="formData.definition" class="form-input" rows="4"></textarea>
               </div>
             </div>
           </div>
@@ -150,14 +154,14 @@
     <div v-if="showDetailModal" class="results-modal" @click.self="closeDetailModal">
       <div class="results-modal-content">
         <div class="results-modal-header">
-          <h3>成语详情</h3>
+          <h3>词语详情</h3>
           <button class="close-btn" @click="closeDetailModal">×</button>
         </div>
         <div class="results-modal-body">
           <div class="result-card">
             <div class="result-header">
-              <span class="result-word">{{ detailItem?.chengyu }}</span>
-              <span class="result-type type-chengyu">成语</span>
+              <span class="result-word">{{ detailItem?.word }}</span>
+              <span class="result-type type-ciyu">词语</span>
               <span v-if="canModify(detailItem)" class="result-mine">我的</span>
               <span v-else-if="detailItem?.created_by === 'admin'" class="result-admin">管理员</span>
               <span v-else-if="!detailItem?.created_by || detailItem?.created_by === 'system'" class="result-system">系统</span>
@@ -169,30 +173,19 @@
               <span v-if="detailItem?.zhuyin" class="zhuyin">注音：{{ detailItem.zhuyin }}</span>
             </div>
             
-            <!-- 成语特有字段 -->
+            <!-- 词语特有字段 -->
             <div class="result-details">
-              <div v-if="detailItem?.emotion" class="detail-item">
-                <span class="label">情感色彩：</span>{{ detailItem.emotion }}
+              <div v-if="detailItem?.part_of_speech" class="detail-item">
+                <span class="label">词性：</span>{{ detailItem.part_of_speech }}
               </div>
-              <div v-if="detailItem?.source" class="detail-item">
-                <span class="label">来源：</span>{{ detailItem.source }}
-              </div>
-              <div v-if="detailItem?.usage" class="detail-item">
-                <span class="label">用法：</span>{{ detailItem.usage }}
-              </div>
-              <div v-if="detailItem?.translation" class="detail-item">
-                <span class="label">翻译：</span>{{ detailItem.translation }}
+              <div v-if="detailItem?.is_common !== null" class="detail-item">
+                <span class="label">常用程度：</span>{{ detailItem.is_common ? '常用词' : '非常用词' }}
               </div>
             </div>
             
-            <!-- 解释 -->
-            <div v-if="detailItem?.explanation" class="result-definition">
-              <span class="label">解释：</span>{{ detailItem.explanation }}
-            </div>
-            
-            <!-- 例句 -->
-            <div v-if="detailItem?.example" class="result-example">
-              <span class="label">例句：</span>{{ detailItem.example }}
+            <!-- 定义 -->
+            <div v-if="detailItem?.definition" class="result-definition">
+              <span class="label">定义：</span>{{ detailItem.definition }}
             </div>
             
             <!-- 同义词和反义词 -->
@@ -222,17 +215,17 @@
 </template>
 
 <script>
-import { computed, ref, onMounted } from 'vue'
-import Header from '../components/Header.vue'
-import request from '../utils/request'
-import { useAuthStore } from '../stores/auth'
+import { ref, computed, onMounted } from 'vue'
+import Header from '../../components/Header.vue'
+import request from '../../utils/request'
+import { useAuthStore } from '../../stores/auth'
 
 export default {
-  name: 'ChengyuList',
+  name: 'CiyuList',
   components: { Header },
   setup() {
     const authStore = useAuthStore()
-    const chengyuList = ref([])
+    const ciyuList = ref([])
     const loading = ref(true)
     const searchQuery = ref('')
     const currentPage = ref(1)
@@ -248,30 +241,27 @@ export default {
     const detailItem = ref(null)
     
     const formData = ref({
-      chengyu: '',
+      word: '',
       pinyin: '',
       zhuyin: '',
-      emotion: '',
-      explanation: '',
-      source: '',
-      usage: '',
-      example: '',
-      translation: ''
+      part_of_speech: '',
+      is_common: null,
+      definition: ''
     })
     
     const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
     
-    const fetchChengyu = async () => {
+    const fetchCiyu = async () => {
       loading.value = true
       try {
         const params = { page: currentPage.value, size: pageSize.value }
         if (searchQuery.value) params.search = searchQuery.value
         
-        const response = await request.get('/v1/chengyu', { params })
-        chengyuList.value = response.data.items
+        const response = await request.get('/v1/ciyu', { params })
+        ciyuList.value = response.data.items
         total.value = response.data.total
       } catch (error) {
-        console.error('获取成语列表失败:', error)
+        console.error('获取词语列表失败:', error)
         alert('获取数据失败')
       } finally {
         loading.value = false
@@ -280,14 +270,14 @@ export default {
     
     const handleSearch = () => {
       currentPage.value = 1
-      fetchChengyu()
+      fetchCiyu()
     }
     
     const goToPage = (page) => {
       if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page
         jumpPage.value = page
-        fetchChengyu()
+        fetchCiyu()
       }
     }
 
@@ -302,8 +292,8 @@ export default {
 
     const resetForm = () => {
       formData.value = { 
-        chengyu: '', pinyin: '', zhuyin: '', emotion: '', 
-        explanation: '', source: '', usage: '', example: '', translation: '' 
+        word: '', pinyin: '', zhuyin: '', part_of_speech: '', 
+        is_common: null, definition: '' 
       }
       editingId.value = null
     }
@@ -316,15 +306,12 @@ export default {
 
     const openEditModal = (item) => {
       formData.value = {
-        chengyu: item.chengyu,
+        word: item.word,
         pinyin: item.pinyin,
         zhuyin: item.zhuyin || '',
-        emotion: item.emotion || '',
-        explanation: item.explanation,
-        source: item.source || '',
-        usage: item.usage || '',
-        example: item.example || '',
-        translation: item.translation || ''
+        part_of_speech: item.part_of_speech || '',
+        is_common: item.is_common,
+        definition: item.definition
       }
       editingId.value = item.id
       showEditModal.value = true
@@ -343,10 +330,16 @@ export default {
     const handleCreate = async () => {
       submitting.value = true
       try {
-        await request.post('/v1/chengyu', formData.value)
+        // 处理常用程度默认值：如果未选择，默认为非常用词
+        const submitData = { ...formData.value }
+        if (submitData.is_common === null) {
+          submitData.is_common = false
+        }
+        
+        await request.post('/v1/ciyu', submitData)
         alert('创建成功')
         closeModal()
-        fetchChengyu()
+        fetchCiyu()
       } catch (error) {
         alert(error.response?.data?.detail || '创建失败')
       } finally {
@@ -357,11 +350,11 @@ export default {
     const handleUpdate = async () => {
       submitting.value = true
       try {
-        const { chengyu, ...updateData } = formData.value
-        await request.put(`/v1/chengyu/${editingId.value}`, updateData)
+        const { word, ...updateData } = formData.value
+        await request.put(`/v1/ciyu/${editingId.value}`, updateData)
         alert('更新成功')
         closeModal()
-        fetchChengyu()
+        fetchCiyu()
       } catch (error) {
         alert(error.response?.data?.detail || '更新失败')
       } finally {
@@ -370,11 +363,11 @@ export default {
     }
 
     const handleDelete = async (item) => {
-      if (!confirm(`确定要删除"${item.chengyu}"吗？`)) return
+      if (!confirm(`确定要删除"${item.word}"吗？`)) return
       try {
-        await request.delete(`/v1/chengyu/${item.id}`)
+        await request.delete(`/v1/ciyu/${item.id}`)
         alert('删除成功')
-        fetchChengyu()
+        fetchCiyu()
       } catch (error) {
         console.error('删除失败:', error)
         alert(error.response?.data?.detail || '删除失败')
@@ -408,11 +401,11 @@ export default {
     }
     
     onMounted(() => {
-      fetchChengyu()
+      fetchCiyu()
     })
     
     return {
-      authStore, chengyuList, loading, searchQuery, currentPage, totalPages, jumpPage,
+      authStore, ciyuList, loading, searchQuery, currentPage, totalPages, jumpPage,
       showCreateModal, showEditModal, showDetailModal, submitting, formData, detailItem,
       handleSearch, goToPage, handleJumpPage, openEditModal, openDetailModal, closeModal, closeDetailModal,
       handleCreate, handleUpdate, handleDelete, getOwnerText, getOwnerClass, canModify
@@ -428,8 +421,30 @@ export default {
   padding: 20px;
 }
 
+.search-box {
+  margin-bottom: 24px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #66bb6a;
+}
+
+
 .text-ellipsis {
-  max-width: 300px;
+  max-width: 250px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -438,7 +453,6 @@ export default {
   display: flex;
   gap: 8px;
 }
-
 .text-muted { color: #999; font-size: 12px; }
 .loading-text, .empty-text { text-align: center; padding: 40px; color: #666; }
 .page-info { padding: 0 15px; }
@@ -465,7 +479,6 @@ export default {
   width: 800px;
   max-width: 95%;
 }
-
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -652,9 +665,9 @@ export default {
   font-size: 12px;
 }
 
-.type-chengyu {
+.type-ciyu {
   background: #e8f5e9;
-  color: #66bb6a;
+  color: #2e7d32;
 }
 
 .result-mine {
@@ -714,16 +727,6 @@ export default {
   color: #444;
   line-height: 1.6;
   margin-bottom: 12px;
-}
-
-.result-example {
-  color: #666;
-  font-style: italic;
-  line-height: 1.6;
-  margin-bottom: 12px;
-  padding: 8px;
-  background: #f8f9fa;
-  border-radius: 4px;
 }
 
 .result-relations {
