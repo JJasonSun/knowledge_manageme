@@ -65,6 +65,7 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
    - 确保在 `backend` 目录下运行命令
    - 如果遇到 "program not found" 错误，请确保已正确安装 uv 并且在正确的目录下
    - 首次运行会自动根据 `app/core/database.py` 中的逻辑初始化数据库表结构
+   - **双数据库支持**：系统同时连接远程 MySQL (基础数据) 和远程 PostgreSQL (题目数据，通过 SSH 隧道)，请确保 `.env` 配置正确。
 4. 验证后端启动成功：
 
    - 访问 http://localhost:8003/docs 查看 API 文档
@@ -168,8 +169,8 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 **路由重定向**：
 
-- `/chengyu` → `/hanzi/chengyu`（向后兼容）
-- `/ciyu` → `/hanzi/ciyu`（向后兼容）
+- `/chengyu` → `/basic/chengyu`（向后兼容）
+- `/ciyu` → `/basic/ciyu`（向后兼容）
 
 ## 项目结构更新
 
@@ -188,14 +189,16 @@ frontend/
 │   ├── utils/
 │   │   └── request.js              # HTTP请求封装
 │   └── views/
-│       ├── Home.vue                # 更新：级联搜索 + 模块卡片
-│       ├── CiyuList.vue            # 词语管理列表
-│       ├── ChengyuList.vue         # 成语管理列表
-│       ├── hanzi/
+│       ├── Home.vue                # 首页（级联搜索 + 模块卡片）
+│       ├── Login.vue               # 登录页
+│       ├── Main.vue                # 主布局
+│       ├── basic/                  # 基础知识模块
+│       │   ├── CiyuList.vue        # 词语管理列表
+│       │   ├── ChengyuList.vue     # 成语管理列表
 │       │   └── HanziList.vue       # 汉字管理
 │       ├── exam/
-│       │   ├── ContentSystemExercises.vue    # 新增：Content System 题目管理
-│       │   └── ScenarioSystemExercises.vue   # 新增：Scenario System AI题目
+│       │   ├── ContentSystemExercises.vue    # Content System 题目管理
+│       │   └── ScenarioSystemExercises.vue   # Scenario System AI题目
 │       └── media/
 │           ├── AudioList.vue       # 音频资源
 │           └── VideoList.vue       # 视频资源
