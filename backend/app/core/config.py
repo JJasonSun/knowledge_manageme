@@ -1,10 +1,23 @@
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Optional
 import os
 
 
 class Settings(BaseSettings):
-    # 数据库配置
+    # SSH Configuration
+    SSH_HOST: Optional[str] = None
+    SSH_PORT: int = 22
+    SSH_USER: Optional[str] = None
+    SSH_PASSWORD: Optional[str] = None
+
+    # Database Configuration (for SSH Tunnel - Questions DB)
+    QUESTIONS_DB_HOST: str = "127.0.0.1"
+    QUESTIONS_DB_PORT: int = 5432
+    QUESTIONS_DB_USER: Optional[str] = None
+    QUESTIONS_DB_PASSWORD: Optional[str] = None
+    QUESTIONS_DB_NAME: Optional[str] = None
+
+    # Main Database Configuration (MySQL)
     DATABASE_URL: str
     
     # JWT配置
@@ -26,7 +39,7 @@ class Settings(BaseSettings):
     ]
     
     class Config:
-        # 获取backend目录的绝对路径，然后指向.env文件
+        # 获取backend目录的绝对路径，然后指向.env文件，从环境变量加载配置
         env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env")
 
 
