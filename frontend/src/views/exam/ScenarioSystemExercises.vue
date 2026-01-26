@@ -73,11 +73,12 @@
                 {{ getExercisePrompt(exercise) }}
               </div>
 
+              <div class="word-info">
+                <div class="info-label">📘 来源课程：{{ getLessonName(exercise) }}</div>
+                <div class="info-label">🔤 关联单词：{{ getVocabDisplay(exercise) }}</div>
+              </div>
+
               <div class="exercise-meta">
-                <div class="meta-item">
-                  <span class="meta-label">来源课程：</span>
-                  <span class="meta-value">{{ getLessonName(exercise) }}</span>
-                </div>
                 <div class="meta-item">
                   <span class="meta-label">题型：</span>
                   <span class="meta-value">{{ getExerciseTypeName(exercise.exercise_type_id) }}</span>
@@ -100,24 +101,24 @@
                 <div class="info-label">题目详情</div>
                 <div class="metadata-content">
                   <template v-if="isType(exercise, 'LISTEN_SENTENCE_QA')">
-                    <div class="meta-block" v-if="getContent(exercise).prompt">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
                       <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ getContent(exercise).prompt }}</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
                     </div>
                     <div class="meta-block">
                       <div class="meta-title">听力原文</div>
-                      <div class="meta-text">{{ getTextValue(getContent(exercise).listeningText, '无听力原文信息') }}</div>
+                      <div class="meta-text">{{ getTextValue(getField(exercise, 'listeningText'), '无听力原文信息') }}</div>
                     </div>
                     <div class="meta-block">
                       <div class="meta-title">问题</div>
                       <div class="meta-text">
-                        {{ getTextValue(getContent(exercise).question, '无问题信息') }}
+                        {{ getTextValue(getField(exercise, 'question'), '无问题信息') }}
                       </div>
                     </div>
-                    <div class="meta-block" v-if="getContent(exercise).options && getContent(exercise).options.length">
+                    <div class="meta-block" v-if="getOptions(exercise).length">
                       <div class="meta-title">选项</div>
                       <div class="options-list">
-                        <div v-for="(option, idx) in getContent(exercise).options" :key="idx" class="option-item">
+                        <div v-for="(option, idx) in getOptions(exercise)" :key="idx" class="option-item">
                           <span class="option-key">{{ getOptionLabel(option, idx) }}.</span>
                           <span class="option-text">{{ getOptionText(option) }}</span>
                           <span v-if="option.pinyin" class="option-pinyin">{{ option.pinyin }}</span>
@@ -131,18 +132,18 @@
                   </template>
 
                   <template v-else-if="isType(exercise, 'LISTEN_SENTENCE_TF')">
-                    <div class="meta-block" v-if="getContent(exercise).prompt">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
                       <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ getContent(exercise).prompt }}</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
                     </div>
                     <div class="meta-block">
                       <div class="meta-title">听力原文</div>
-                      <div class="meta-text">{{ getTextValue(getContent(exercise).listeningText, '无听力原文信息') }}</div>
+                      <div class="meta-text">{{ getTextValue(getField(exercise, 'listeningText'), '无听力原文信息') }}</div>
                     </div>
                     <div class="meta-block">
                       <div class="meta-title">判断句</div>
                       <div class="meta-text">
-                        {{ getTextValue(getContent(exercise).statement, '无判断句信息') }}
+                        {{ getTextValue(getField(exercise, 'statement'), '无判断句信息') }}
                       </div>
                     </div>
                     <div class="meta-block">
@@ -151,24 +152,24 @@
                   </template>
 
                   <template v-else-if="isType(exercise, 'READ_SENTENCE_COMPREHENSION_CHOICE')">
-                    <div class="meta-block" v-if="getContent(exercise).prompt">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
                       <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ getContent(exercise).prompt }}</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
                     </div>
-                    <div class="meta-block" v-if="getContent(exercise).passage">
+                    <div class="meta-block" v-if="getField(exercise, 'passage')">
                       <div class="meta-title">阅读材料</div>
-                      <div class="meta-text">{{ getContent(exercise).passage }}</div>
+                      <div class="meta-text">{{ getField(exercise, 'passage') }}</div>
                     </div>
                     <div class="meta-block">
                       <div class="meta-title">问题</div>
                       <div class="meta-text">
-                        {{ getTextValue(getContent(exercise).question, '无问题信息') }}
+                        {{ getTextValue(getField(exercise, 'question'), '无问题信息') }}
                       </div>
                     </div>
-                    <div class="meta-block" v-if="getContent(exercise).options && getContent(exercise).options.length">
+                    <div class="meta-block" v-if="getOptions(exercise).length">
                       <div class="meta-title">选项</div>
                       <div class="options-list">
-                        <div v-for="(option, idx) in getContent(exercise).options" :key="idx" class="option-item">
+                        <div v-for="(option, idx) in getOptions(exercise)" :key="idx" class="option-item">
                           <span class="option-key">{{ getOptionLabel(option, idx) }}.</span>
                           <span class="option-text">{{ getOptionText(option) }}</span>
                           <span v-if="option.pinyin" class="option-pinyin">{{ option.pinyin }}</span>
@@ -184,23 +185,23 @@
                   <template v-else-if="isType(exercise, 'READ_WORD_GAP_FILL')">
                     <div class="meta-block">
                       <div class="meta-title">题干</div>
-                      <div class="meta-text">{{ getTextValue(getContent(exercise).text, '无题干信息') }}</div>
+                      <div class="meta-text">{{ getTextValue(getField(exercise, 'text'), '无题干信息') }}</div>
                     </div>
-                    <div class="meta-block" v-if="getContent(exercise).prompt">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
                       <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ getContent(exercise).prompt }}</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
                     </div>
-                    <div class="meta-block" v-if="getContent(exercise).blanks && getContent(exercise).blanks.length">
+                    <div class="meta-block" v-if="getField(exercise, 'blanks') && getField(exercise, 'blanks').length">
                       <div class="meta-title">填空选项</div>
                       <div class="meta-list">
-                        <div v-for="(blank, idx) in getContent(exercise).blanks" :key="idx" class="meta-item-card">
+                        <div v-for="(blank, idx) in getField(exercise, 'blanks')" :key="idx" class="meta-item-card">
                           <div class="meta-subtitle">空{{ getTextValue(blank.blankIndex, idx) }}</div>
                           <div class="options-list">
                             <div v-for="opt in getBlankOptions(blank)" :key="opt.key" class="option-item">
                               <span class="option-key">{{ opt.key }}.</span>
                               <span class="option-text">{{ getTextValue(opt.text, '无选项信息') }}</span>
                               <span v-if="opt.pinyin" class="option-pinyin">{{ opt.pinyin }}</span>
-                              <span v-if="getBlankCorrectAnswer(blank, exercise.metadata, idx) === opt.key" class="correct-mark">✓</span>
+                              <span v-if="getBlankCorrectAnswer(blank, exercise.metadata?.content || exercise.metadata, idx) === opt.key" class="correct-mark">✓</span>
                             </div>
                           </div>
                         </div>
@@ -209,15 +210,15 @@
                   </template>
 
                   <template v-else-if="isType(exercise, 'READ_SENTENCE_ORDER')">
-                    <div class="meta-block" v-if="getContent(exercise).prompt">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
                       <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ getContent(exercise).prompt }}</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
                     </div>
-                    <div class="meta-block" v-if="getContent(exercise).sentences && getContent(exercise).sentences.length">
+                    <div class="meta-block" v-if="getField(exercise, 'sentences') && getField(exercise, 'sentences').length">
                       <div class="meta-title">句子片段</div>
                       <div class="meta-list">
-                        <div v-for="(sentence, idx) in getContent(exercise).sentences" :key="idx" class="meta-item-card">
-                          {{ sentence.label }}. {{ sentence.text }}
+                        <div v-for="(sentence, idx) in getField(exercise, 'sentences')" :key="idx" class="meta-item-card">
+                          {{ sentence.label }}. {{ sentence.text || sentence.sentence || sentence.content }}
                         </div>
                       </div>
                     </div>
@@ -227,15 +228,15 @@
                   </template>
 
                   <template v-else-if="isType(exercise, 'READ_WORD_ORDER')">
-                    <div class="meta-block" v-if="getContent(exercise).prompt">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
                       <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ getContent(exercise).prompt }}</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
                     </div>
-                    <div class="meta-block" v-if="getContent(exercise).words && getContent(exercise).words.length">
+                    <div class="meta-block" v-if="getField(exercise, 'words') && getField(exercise, 'words').length">
                       <div class="meta-title">词语</div>
                       <div class="meta-list">
-                        <div v-for="(word, idx) in getContent(exercise).words" :key="idx" class="meta-item-card">
-                          {{ word.label }}. {{ word.text }}
+                        <div v-for="(word, idx) in getField(exercise, 'words')" :key="idx" class="meta-item-card">
+                          {{ word.label }}. {{ word.text || word.word || word.value }}
                         </div>
                       </div>
                     </div>
@@ -245,17 +246,17 @@
                   </template>
 
                   <template v-else-if="isType(exercise, 'READ_SENTENCE_TF')">
-                    <div class="meta-block" v-if="getContent(exercise).prompt">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
                       <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ getContent(exercise).prompt }}</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
                     </div>
                     <div class="meta-block">
                       <div class="meta-title">阅读材料</div>
-                      <div class="meta-text">{{ getTextValue(getContent(exercise).passage, '无阅读材料信息') }}</div>
+                      <div class="meta-text">{{ getTextValue(getField(exercise, 'passage'), '无阅读材料信息') }}</div>
                     </div>
                     <div class="meta-block">
                       <div class="meta-title">判断句</div>
-                      <div class="meta-text">{{ getTextValue(getContent(exercise).statement, '无判断句信息') }}</div>
+                      <div class="meta-text">{{ getTextValue(getField(exercise, 'statement'), '无判断句信息') }}</div>
                     </div>
                     <div class="meta-block">
                       <span class="answer-badge">答案：{{ formatBoolean(exercise.metadata.correctAnswer) }}</span>
@@ -263,13 +264,13 @@
                   </template>
 
                   <template v-else-if="isType(exercise, 'READ_SENTENCE_TRANSLATION')">
-                    <div class="meta-block" v-if="getContent(exercise).prompt">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
                       <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ getContent(exercise).prompt }}</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
                     </div>
                     <div class="meta-block">
                       <div class="meta-title">中文</div>
-                      <div class="meta-text">{{ getTextValue(getContent(exercise).sentenceCn, '无中文信息') }}</div>
+                      <div class="meta-text">{{ getTextValue(getField(exercise, 'sentenceCn'), '无中文信息') }}</div>
                     </div>
                     <div class="meta-block">
                       <div class="meta-title">英文</div>
@@ -278,36 +279,36 @@
                   </template>
 
                   <template v-else-if="isType(exercise, 'SPEAK_FOLLOW')">
-                    <div class="meta-block" v-if="getContent(exercise).prompt">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
                       <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ getContent(exercise).prompt }}</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
                     </div>
                     <div class="meta-block">
                       <div class="meta-title">句子</div>
                       <div class="meta-text">
-                        {{ getTextValue(getContent(exercise).sentence, '无句子信息') }}
-                        <span v-if="getContent(exercise).pinyin" class="pinyin-text">{{ getContent(exercise).pinyin }}</span>
+                        {{ getTextValue(getField(exercise, 'sentence'), '无句子信息') }}
+                        <span v-if="getField(exercise, 'pinyin')" class="pinyin-text">{{ getField(exercise, 'pinyin') }}</span>
                       </div>
                     </div>
                     <div class="meta-block">
-                      <span class="answer-badge">示例音频：{{ getTextValue(getContent(exercise).sampleAudioUrl, '无音频信息') }}</span>
+                      <span class="answer-badge">示例音频：{{ getTextValue(getField(exercise, 'sampleAudioUrl'), '无音频信息') }}</span>
                     </div>
                   </template>
 
                   <template v-else-if="isType(exercise, 'TRANSLATE_WORD_ORDER')">
-                    <div class="meta-block" v-if="getContent(exercise).prompt">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
                       <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ getContent(exercise).prompt }}</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
                     </div>
                     <div class="meta-block">
                       <div class="meta-title">原句</div>
-                      <div class="meta-text">{{ getTextValue(getContent(exercise).originalSentence, '无原句信息') }}</div>
+                      <div class="meta-text">{{ getTextValue(getField(exercise, 'originalSentence'), '无原句信息') }}</div>
                     </div>
-                    <div class="meta-block" v-if="getContent(exercise).words && getContent(exercise).words.length">
+                    <div class="meta-block" v-if="getField(exercise, 'words') && getField(exercise, 'words').length">
                       <div class="meta-title">词语</div>
                       <div class="meta-list">
-                        <div v-for="(word, idx) in getContent(exercise).words" :key="idx" class="meta-item-card">
-                          {{ word.label }}. {{ word.text }}
+                        <div v-for="(word, idx) in getField(exercise, 'words')" :key="idx" class="meta-item-card">
+                          {{ word.label }}. {{ word.text || word.word || word.value }}
                         </div>
                       </div>
                     </div>
@@ -328,6 +329,8 @@
                     <span class="media-name">{{ getMediaName(media) }}</span>
                     <span class="media-role">{{ getMediaRoleName(media.usage_role) }}</span>
                     <span class="media-type">{{ media.mime_type }}</span>
+                    <img v-if="media.file_type === 'image' && media.file_url" :src="media.file_url" class="media-preview" />
+                    <audio v-else-if="media.file_type === 'audio' && media.file_url" :src="media.file_url" controls class="media-audio"></audio>
                   </div>
                 </div>
               </div>
@@ -501,11 +504,33 @@ export default {
       }
       return exercise?.source_lesson_name || '无来源课程信息'
     }
+
+    const getVocabDisplay = (exercise) => {
+      const vocab = exercise?.vocab_package?.vocab
+      if (!vocab) return '无关联单词信息'
+      if (vocab.hsk_level) return `${vocab.word} (HSK${vocab.hsk_level})`
+      return vocab.word || '无关联单词信息'
+    }
     
     const getExercisePrompt = (exercise) => {
-      if (exercise.metadata && exercise.metadata.question) return exercise.metadata.question
-      if (exercise.metadata && exercise.metadata.prompt) return exercise.metadata.prompt
+      const m = exercise?.metadata || {}
+      const c = m?.content || {}
+      const prompt = c.prompt ?? m.prompt ?? c.question ?? m.question
+      if (prompt) return prompt
       return exercise.prompt || '无题干信息'
+    }
+
+    const getField = (exercise, key) => {
+      const m = exercise?.metadata || {}
+      const c = m?.content || {}
+      const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase()
+      return c[key] ?? c[snake] ?? m[key] ?? m[snake]
+    }
+
+    const getOptions = (exercise) => {
+      const m = exercise?.metadata || {}
+      const c = m?.content || {}
+      return c.options ?? m.options ?? []
     }
 
     const getExerciseMedia = (exerciseId) => {
@@ -543,7 +568,8 @@ export default {
     }
 
     const getContent = (exercise) => {
-      return exercise?.metadata?.content || {}
+      const metadata = exercise?.metadata || {}
+      return metadata.content || metadata || {}
     }
 
     const getTextValue = (value, fallback) => {
@@ -575,7 +601,7 @@ export default {
     }
 
     const getCorrectAnswer = (metadata) => {
-      return metadata?.correctAnswer
+      return metadata?.correctAnswer ?? metadata?.content?.correctAnswer ?? metadata?.correct_answer
     }
 
     const isCorrectOptionByAnswer = (answer, option, idx) => {
@@ -621,7 +647,7 @@ export default {
     }
 
     const formatCorrectAnswer = (metadata) => {
-      const answer = metadata?.correctAnswer
+      const answer = metadata?.correctAnswer ?? metadata?.correct_answer ?? metadata?.correct_label
       if (Array.isArray(answer)) return answer.join(' ')
       if (answer && typeof answer === 'object') {
         return Object.keys(answer).map(key => `${key}:${answer[key]}`).join(' ')
@@ -654,6 +680,7 @@ export default {
       getExerciseTypeName,
       getSkillCategoryName,
       getLessonName,
+      getVocabDisplay,
       getExercisePrompt,
       getExerciseMedia,
       getMediaRoleName,
@@ -662,6 +689,8 @@ export default {
       getExerciseTypeKey,
       isType,
       getContent,
+      getField,
+      getOptions,
       getTextValue,
       formatBoolean,
       getOptionLabel,

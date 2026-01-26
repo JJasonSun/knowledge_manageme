@@ -102,6 +102,9 @@
                 <div class="info-label">
                   🔤 关联单词：{{ getWordDisplay(exercise) }}
                 </div>
+                <div v-if="getWordPinyin(exercise)" class="word-sub">拼音：{{ getWordPinyin(exercise) }}</div>
+                <div v-if="getWordTranslation(exercise)" class="word-sub">释义：{{ getWordTranslation(exercise) }}</div>
+                <div v-if="getWordHskLevel(exercise)" class="word-sub">HSK：{{ getWordHskLevel(exercise) }}</div>
               </div>
 
               <div class="exercise-meta">
@@ -492,11 +495,7 @@
               </div>
             </div>
 
-            <div class="card-footer">
-              <div class="create-time">
-                创建时间：{{ formatDate(exercise.created_at) }}
-              </div>
-            </div>
+
           </div>
         </div>
         
@@ -678,9 +677,24 @@ export default {
     const getWordDisplay = (exercise) => {
       const word = exercise?.word
       if (word) {
-        return word.text || word.word || word.name || '无关联单词信息'
+        return word.characters || word.word || word.text || word.name || '无关联单词信息'
       }
       return exercise?.word_text || exercise?.word_name || '无关联单词信息'
+    }
+
+    const getWordPinyin = (exercise) => {
+      const word = exercise?.word
+      return word?.pinyin || ''
+    }
+
+    const getWordTranslation = (exercise) => {
+      const word = exercise?.word
+      return word?.translation || ''
+    }
+
+    const getWordHskLevel = (exercise) => {
+      const word = exercise?.word
+      return word?.hsk_level || ''
     }
     
     const getDifficultyText = (level) => {
@@ -835,6 +849,9 @@ export default {
       getSkillCategoryName,
       getExercisePrompt,
       getWordDisplay,
+      getWordPinyin,
+      getWordTranslation,
+      getWordHskLevel,
       getDifficultyText,
       getDifficultyClass,
       getQualityText,
@@ -1244,6 +1261,12 @@ code {
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 15px;
+}
+
+.word-sub {
+  color: #2e7d32;
+  font-size: 0.9rem;
+  margin-top: 6px;
 }
 
 .exercise-meta {

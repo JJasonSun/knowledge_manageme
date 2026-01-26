@@ -13,6 +13,19 @@ class SkillCategoryResponse(SkillCategoryBase):
     class Config:
         orm_mode = True
 
+class WordBase(BaseModel):
+    characters: str
+    pinyin: Optional[str] = None
+    translation: Optional[str] = None
+    hsk_level: Optional[int] = None
+    audio_url: Optional[str] = None
+
+class WordResponse(WordBase):
+    id: UUID4
+
+    class Config:
+        orm_mode = True
+
 class ExerciseTypeBase(BaseModel):
     name: str
     display_name: Optional[str] = None
@@ -66,6 +79,7 @@ class ExerciseResponse(ExerciseBase):
     updated_at: Optional[datetime] = None
     
     exercise_type: Optional[ExerciseTypeResponse] = None
+    word: Optional[WordResponse] = None
     media_assets: List[ExerciseMediaAssetResponse] = []
     sub_exercises: List["ExerciseResponse"] = []
 

@@ -38,6 +38,17 @@ class MediaAsset(BasePG):
     description = Column(Text)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
+class Word(BasePG):
+    __tablename__ = "words"
+    __table_args__ = {"schema": "content_new"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    characters = Column(String(100), unique=True, nullable=False)
+    pinyin = Column(String(255))
+    translation = Column(Text)
+    hsk_level = Column(SmallInteger)
+    audio_url = Column(Text)
+
 class Exercise(BasePG):
     __tablename__ = "exercises"
     __table_args__ = {"schema": "content_new"}
@@ -45,7 +56,7 @@ class Exercise(BasePG):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     parent_exercise_id = Column(UUID(as_uuid=True), ForeignKey("content_new.exercises.id"), nullable=True)
     exercise_type_id = Column(UUID(as_uuid=True), ForeignKey("content_new.exercise_types.id"))
-    word_id = Column(UUID(as_uuid=True), nullable=True) # Assuming words table exists but maybe not mapping it yet
+    word_id = Column(UUID(as_uuid=True), ForeignKey("content_new.words.id"), nullable=True)
     prompt = Column(Text)
     exercise_metadata = Column("metadata", JSONB)
     difficulty_level = Column(SmallInteger, default=1)
@@ -54,6 +65,7 @@ class Exercise(BasePG):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
     exercise_type = relationship("ExerciseType")
+    word = relationship("Word")
     parent_exercise = relationship("Exercise", remote_side=[id], backref="sub_exercises")
     media_assets = relationship("ExerciseMediaAsset", back_populates="exercise")
 

@@ -13,6 +13,39 @@ class SLSkillCategoryResponse(SLSkillCategoryBase):
     class Config:
         orm_mode = True
 
+class GeneratedLessonBase(BaseModel):
+    lesson_db_id: int
+    lesson_name: Optional[str] = None
+    type: Optional[str] = None
+    lesson_id_str: Optional[str] = None
+    generated_at: Optional[datetime] = None
+
+class GeneratedLessonResponse(GeneratedLessonBase):
+    class Config:
+        orm_mode = True
+
+class VocabularyBase(BaseModel):
+    word: Optional[str] = None
+    hsk_level: Optional[int] = None
+
+class VocabularyResponse(VocabularyBase):
+    vocab_uuid: UUID4
+
+    class Config:
+        orm_mode = True
+
+class GeneratedVocabPackageBase(BaseModel):
+    vocab_package_db_id: int
+    lesson_db_id: Optional[int] = None
+    vocab_uuid: Optional[UUID4] = None
+
+class GeneratedVocabPackageResponse(GeneratedVocabPackageBase):
+    vocab: Optional[VocabularyResponse] = None
+    lesson: Optional[GeneratedLessonResponse] = None
+
+    class Config:
+        orm_mode = True
+
 class SLExerciseTypeBase(BaseModel):
     name: str
     display_name: Optional[str] = None
@@ -69,6 +102,8 @@ class SLExerciseResponse(SLExerciseBase):
     updated_at: Optional[datetime] = None
     
     exercise_type: Optional[SLExerciseTypeResponse] = None
+    source_lesson: Optional[GeneratedLessonResponse] = None
+    vocab_package: Optional[GeneratedVocabPackageResponse] = None
     media_assets: List[SLExerciseMediaAssetResponse] = []
     sub_exercises: List["SLExerciseResponse"] = []
 
