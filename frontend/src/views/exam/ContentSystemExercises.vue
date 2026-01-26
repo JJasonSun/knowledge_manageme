@@ -212,8 +212,8 @@
                         <div v-for="(keyword, idx) in exercise.metadata.keywords" :key="idx" class="meta-item-card">{{ keyword }}</div>
                       </div>
                     </div>
-                    <div class="meta-block" v-if="exercise.metadata.correct_image_index !== undefined">
-                      <span class="answer-badge">正确图片序号：{{ exercise.metadata.correct_image_index }}</span>
+                    <div class="meta-block">
+                      <span class="answer-badge">正确图片序号：{{ getTextValue(getCorrectImageIndex(exercise.metadata), '无答案信息') }}</span>
                     </div>
                   </template>
 
@@ -226,7 +226,7 @@
                       </div>
                     </div>
                     <div class="meta-block">
-                      <span class="answer-badge">正确图片序号：{{ getTextValue(exercise.metadata.correct_image_index, '无答案信息') }}</span>
+                      <span class="answer-badge">正确图片序号：{{ getTextValue(getCorrectImageIndex(exercise.metadata), '无答案信息') }}</span>
                     </div>
                   </template>
 
@@ -793,6 +793,11 @@ export default {
       return option || '无选项信息'
     }
 
+    const getCorrectImageIndex = (metadata) => {
+      if (!metadata) return ''
+      return metadata.correct_image_index ?? metadata.correctImageIndex ?? metadata.correct_answer ?? metadata.correctAnswer ?? ''
+    }
+
     const getBlankOptions = (blank) => {
       const options = blank?.options || {}
       return Object.keys(options).map(key => ({
@@ -882,6 +887,7 @@ export default {
       formatBoolean,
       getOptionLabel,
       getOptionText,
+      getCorrectImageIndex,
       getBlankOptions,
       getBlankCorrectAnswer,
       getShuffledPieces,

@@ -53,6 +53,17 @@
         </div>
       </div>
 
+      <div class="stats-section">
+        <div class="stat-card">
+          <div class="stat-number">{{ total }}</div>
+          <div class="stat-label">题目总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ filteredExercises.length }}</div>
+          <div class="stat-label">当前页数量</div>
+        </div>
+      </div>
+
       <div class="exercises-section">
         <h3>🎯 AI生成的题目</h3>
         <div v-if="filteredExercises.length > 0" class="cards-grid">
@@ -147,7 +158,66 @@
                       </div>
                     </div>
                     <div class="meta-block">
-                      <span class="answer-badge">答案：{{ formatBoolean(exercise.metadata.correctAnswer) }}</span>
+                      <span class="answer-badge">答案：{{ formatBoolean(getCorrectAnswer(exercise.metadata)) }}</span>
+                    </div>
+                  </template>
+
+                  <template v-else-if="isType(exercise, 'LISTEN_IMAGE_TRUE_FALSE')">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
+                      <div class="meta-title">提示</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
+                    </div>
+                    <div class="meta-block">
+                      <div class="meta-title">听力原文</div>
+                      <div class="meta-text">{{ getTextValue(getField(exercise, 'listeningText'), '无听力原文信息') }}</div>
+                    </div>
+                    <div class="meta-block">
+                      <span class="answer-badge">答案：{{ formatBoolean(getCorrectAnswer(exercise.metadata)) }}</span>
+                    </div>
+                  </template>
+
+                  <template v-else-if="isType(exercise, 'LISTEN_IMAGE_MC')">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
+                      <div class="meta-title">提示</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
+                    </div>
+                    <div class="meta-block">
+                      <div class="meta-title">听力原文</div>
+                      <div class="meta-text">{{ getTextValue(getField(exercise, 'listeningText'), '无听力原文信息') }}</div>
+                    </div>
+                    <div class="meta-block" v-if="getOptions(exercise).length">
+                      <div class="meta-title">选项</div>
+                      <div class="options-list">
+                        <div v-for="(option, idx) in getOptions(exercise)" :key="idx" class="option-item">
+                          <span class="option-key">{{ getOptionLabel(option, idx) }}.</span>
+                          <span class="option-text">{{ getOptionText(option) }}</span>
+                          <span v-if="option.image_asset_id || option.imageAssetId" class="option-pinyin">{{ option.image_asset_id || option.imageAssetId }}</span>
+                          <span v-if="isCorrectOptionByAnswer(getCorrectAnswer(exercise.metadata), option, idx)" class="correct-mark">✓</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="meta-block">
+                      <span class="answer-badge">正确答案：{{ formatCorrectAnswer(exercise.metadata) }}</span>
+                    </div>
+                  </template>
+
+                  <template v-else-if="isType(exercise, 'LISTEN_IMAGE_MATCH')">
+                    <div class="meta-block" v-if="getField(exercise, 'prompt')">
+                      <div class="meta-title">提示</div>
+                      <div class="meta-text">{{ getField(exercise, 'prompt') }}</div>
+                    </div>
+                    <div class="meta-block">
+                      <div class="meta-title">听力原文</div>
+                      <div class="meta-text">{{ getTextValue(getField(exercise, 'listeningText'), '无听力原文信息') }}</div>
+                    </div>
+                    <div class="meta-block" v-if="getKeywordList(exercise).length">
+                      <div class="meta-title">关键词</div>
+                      <div class="meta-list">
+                        <div v-for="(keyword, idx) in getKeywordList(exercise)" :key="idx" class="meta-item-card">{{ keyword }}</div>
+                      </div>
+                    </div>
+                    <div class="meta-block">
+                      <span class="answer-badge">正确图片序号：{{ getTextValue(getCorrectImageIndex(exercise), '无答案信息') }}</span>
                     </div>
                   </template>
 
@@ -173,6 +243,76 @@
                           <span class="option-key">{{ getOptionLabel(option, idx) }}.</span>
                           <span class="option-text">{{ getOptionText(option) }}</span>
                           <span v-if="option.pinyin" class="option-pinyin">{{ option.pinyin }}</span>
+                          <span v-if="isCorrectOptionByAnswer(getCorrectAnswer(exercise.metadata), option, idx)" class="correct-mark">✓</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="meta-block">
+                      <span class="answer-badge">正确答案：{{ formatCorrectAnswer(exercise.metadata) }}</span>
+                    </div>
+                  </template>
+
+                  <template v-else-if="isType(exercise, 'READ_IMAGE_MATCH')">
+                    <div class="meta-block">
+                      <div class="meta-title">词语</div>
+                      <div class="meta-text">
+                        {{ getTextValue(getField(exercise, 'word'), '无词语信息') }}
+                        <span v-if="getField(exercise, 'pinyin')" class="pinyin-text">{{ getField(exercise, 'pinyin') }}</span>
+                      </div>
+                    </div>
+                    <div class="meta-block">
+                      <span class="answer-badge">正确图片序号：{{ getTextValue(getCorrectImageIndex(exercise), '无答案信息') }}</span>
+                    </div>
+                  </template>
+
+                  <template v-else-if="isType(exercise, 'READ_IMAGE_TRUE_FALSE')">
+                    <div class="meta-block">
+                      <div class="meta-title">词语</div>
+                      <div class="meta-text">
+                        {{ getTextValue(getField(exercise, 'word'), '无词语信息') }}
+                        <span v-if="getField(exercise, 'pinyin')" class="pinyin-text">{{ getField(exercise, 'pinyin') }}</span>
+                      </div>
+                    </div>
+                    <div class="meta-block">
+                      <span class="answer-badge">答案：{{ formatBoolean(getCorrectAnswer(exercise.metadata)) }}</span>
+                    </div>
+                  </template>
+
+                  <template v-else-if="isType(exercise, 'READ_DIALOGUE_MATCH')">
+                    <div class="meta-block">
+                      <div class="meta-title">对话</div>
+                      <div class="meta-text">
+                        {{ getTextValue(getField(exercise, 'utterance'), '无问题信息') }}
+                        <span v-if="getField(exercise, 'utterPinyin')" class="pinyin-text">{{ getField(exercise, 'utterPinyin') }}</span>
+                      </div>
+                    </div>
+                    <div class="meta-block">
+                      <div class="meta-title">回答</div>
+                      <div class="meta-text">
+                        {{ getTextValue(getField(exercise, 'reply'), '无回答信息') }}
+                        <span v-if="getField(exercise, 'replyPinyin')" class="pinyin-text">{{ getField(exercise, 'replyPinyin') }}</span>
+                      </div>
+                    </div>
+                    <div class="meta-block">
+                      <span class="answer-badge">配对序号：{{ getTextValue(getField(exercise, 'pairIndex'), '无配对信息') }}</span>
+                    </div>
+                  </template>
+
+                  <template v-else-if="isType(exercise, 'READ_PARAGRAPH_COMPREHENSION')">
+                    <div class="meta-block" v-if="getField(exercise, 'passage')">
+                      <div class="meta-title">阅读材料</div>
+                      <div class="meta-text">{{ getField(exercise, 'passage') }}</div>
+                    </div>
+                    <div class="meta-block">
+                      <div class="meta-title">问题</div>
+                      <div class="meta-text">{{ getTextValue(getField(exercise, 'question'), '无问题信息') }}</div>
+                    </div>
+                    <div class="meta-block" v-if="getOptions(exercise).length">
+                      <div class="meta-title">选项</div>
+                      <div class="options-list">
+                        <div v-for="(option, idx) in getOptions(exercise)" :key="idx" class="option-item">
+                          <span class="option-key">{{ getOptionLabel(option, idx) }}.</span>
+                          <span class="option-text">{{ getOptionText(option) }}</span>
                           <span v-if="isCorrectOptionByAnswer(getCorrectAnswer(exercise.metadata), option, idx)" class="correct-mark">✓</span>
                         </div>
                       </div>
@@ -259,7 +399,7 @@
                       <div class="meta-text">{{ getTextValue(getField(exercise, 'statement'), '无判断句信息') }}</div>
                     </div>
                     <div class="meta-block">
-                      <span class="answer-badge">答案：{{ formatBoolean(exercise.metadata.correctAnswer) }}</span>
+                      <span class="answer-badge">答案：{{ formatBoolean(getCorrectAnswer(exercise.metadata)) }}</span>
                     </div>
                   </template>
 
@@ -513,7 +653,7 @@ export default {
     }
     
     const getExercisePrompt = (exercise) => {
-      const m = exercise?.metadata || {}
+      const m = getMetadataObject(exercise)
       const c = m?.content || {}
       const prompt = c.prompt ?? m.prompt ?? c.question ?? m.question
       if (prompt) return prompt
@@ -521,16 +661,31 @@ export default {
     }
 
     const getField = (exercise, key) => {
-      const m = exercise?.metadata || {}
+      const m = getMetadataObject(exercise)
       const c = m?.content || {}
       const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase()
       return c[key] ?? c[snake] ?? m[key] ?? m[snake]
     }
 
     const getOptions = (exercise) => {
-      const m = exercise?.metadata || {}
+      const m = getMetadataObject(exercise)
       const c = m?.content || {}
       return c.options ?? m.options ?? []
+    }
+
+    const getKeywordList = (exercise) => {
+      const keywords = getField(exercise, 'keywords') ?? getField(exercise, 'keywordList')
+      if (!keywords) return []
+      if (Array.isArray(keywords)) return keywords
+      return [keywords]
+    }
+
+    const getCorrectImageIndex = (exercise) => {
+      const value = getField(exercise, 'correctImageIndex')
+      if (value !== undefined && value !== null && value !== '') return value
+      const fallback = getField(exercise, 'correctAnswer')
+      if (fallback !== undefined && fallback !== null && fallback !== '') return fallback
+      return ''
     }
 
     const getExerciseMedia = (exerciseId) => {
@@ -568,7 +723,7 @@ export default {
     }
 
     const getContent = (exercise) => {
-      const metadata = exercise?.metadata || {}
+      const metadata = getMetadataObject(exercise)
       return metadata.content || metadata || {}
     }
 
@@ -601,7 +756,8 @@ export default {
     }
 
     const getCorrectAnswer = (metadata) => {
-      return metadata?.correctAnswer ?? metadata?.content?.correctAnswer ?? metadata?.correct_answer
+      const value = normalizeMetadata(metadata)
+      return value?.correctAnswer ?? value?.content?.correctAnswer ?? value?.correct_answer
     }
 
     const isCorrectOptionByAnswer = (answer, option, idx) => {
@@ -647,13 +803,30 @@ export default {
     }
 
     const formatCorrectAnswer = (metadata) => {
-      const answer = metadata?.correctAnswer ?? metadata?.correct_answer ?? metadata?.correct_label
+      const value = normalizeMetadata(metadata)
+      const answer = value?.correctAnswer ?? value?.correct_answer ?? value?.correct_label
       if (Array.isArray(answer)) return answer.join(' ')
       if (answer && typeof answer === 'object') {
         return Object.keys(answer).map(key => `${key}:${answer[key]}`).join(' ')
       }
       if (typeof answer === 'boolean') return formatBoolean(answer)
       return getTextValue(answer, '无答案信息')
+    }
+
+    const normalizeMetadata = (metadata) => {
+      if (!metadata) return {}
+      if (typeof metadata === 'string') {
+        try {
+          return JSON.parse(metadata)
+        } catch (error) {
+          return {}
+        }
+      }
+      return metadata
+    }
+
+    const getMetadataObject = (exercise) => {
+      return normalizeMetadata(exercise?.metadata)
     }
 
     const getDifficultyText = (level) => {
@@ -691,6 +864,8 @@ export default {
       getContent,
       getField,
       getOptions,
+      getKeywordList,
+      getCorrectImageIndex,
       getTextValue,
       formatBoolean,
       getOptionLabel,
@@ -703,7 +878,8 @@ export default {
       formatOrder,
       formatCorrectAnswer,
       getDifficultyText,
-      formatDate
+      formatDate,
+      getMetadataObject
     }
   }
 }
@@ -792,6 +968,33 @@ export default {
 .search-input:focus {
   outline: none;
   border-color: #ab47bc;
+}
+
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #f5f5f5 0%, #f3e5f5 100%);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #6a1b9a;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 0.95rem;
 }
 
 .exercises-section {
