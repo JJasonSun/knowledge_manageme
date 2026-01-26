@@ -22,6 +22,7 @@ class SLExerciseTypeBase(BaseModel):
 class SLExerciseTypeResponse(SLExerciseTypeBase):
     id: UUID4
     skill_category_id: Optional[UUID4] = None
+    skill_category: Optional[SLSkillCategoryResponse] = None
 
     class Config:
         orm_mode = True

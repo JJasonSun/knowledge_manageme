@@ -22,6 +22,7 @@ class ExerciseTypeBase(BaseModel):
 class ExerciseTypeResponse(ExerciseTypeBase):
     id: UUID4
     skill_category_id: Optional[UUID4] = None
+    skill_category: Optional[SkillCategoryResponse] = None
 
     class Config:
         orm_mode = True
@@ -61,6 +62,8 @@ class ExerciseResponse(ExerciseBase):
     parent_exercise_id: Optional[UUID4] = None
     exercise_type_id: Optional[UUID4] = None
     word_id: Optional[UUID4] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     
     exercise_type: Optional[ExerciseTypeResponse] = None
     media_assets: List[ExerciseMediaAssetResponse] = []

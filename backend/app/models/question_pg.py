@@ -50,6 +50,8 @@ class Exercise(BasePG):
     exercise_metadata = Column("metadata", JSONB)
     difficulty_level = Column(SmallInteger, default=1)
     quality_status = Column(SmallInteger, default=0)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
     exercise_type = relationship("ExerciseType")
     parent_exercise = relationship("Exercise", remote_side=[id], backref="sub_exercises")
