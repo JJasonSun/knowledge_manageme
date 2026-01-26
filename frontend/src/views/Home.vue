@@ -112,6 +112,7 @@
             </div>
 
             <div v-else class="results-list">
+              <!-- 结果列表展示 -->
               <div 
                 v-for="item in searchResults" 
                 :key="item.type + '-' + item.id" 
@@ -238,7 +239,6 @@ import Header from '../components/Header.vue'
 import request from '../utils/request'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
-import { contentSystemMock, scenarioSystemMock } from '../mock/exerciseData'
 
 export default {
   name: 'Home',
@@ -255,6 +255,8 @@ export default {
     const hasSearched = ref(false)
     const totalResults = ref(0)
     const showResultsModal = ref(false)
+    const showDetailModal = ref(false)
+    const selectedItem = ref(null)
 
     // 模块变更处理
     const handleModuleChange = () => {
@@ -375,53 +377,9 @@ export default {
           } catch (error) {
             console.error('搜索汉字失败:', error)
           }
-        } else if (selectedType.value === 'content-system') {
-          // 搜索 Content System 题目 (Mock)
-          const keyword = searchQuery.value.toLowerCase()
-          const matchedExercises = contentSystemMock.exercises.filter(ex => 
-            ex.prompt.toLowerCase().includes(keyword) || 
-            (ex.metadata.options && ex.metadata.options.some(opt => opt.text && opt.text.toLowerCase().includes(keyword)))
-          )
-          
-          matchedExercises.forEach(ex => {
-            const typeInfo = contentSystemMock.exerciseTypes.find(t => t.id === ex.exercise_type_id)
-            results.push({
-              id: ex.id,
-              type: 'content-system',
-              word: ex.prompt, // 使用 prompt 作为主要显示文本
-              definition: `题型: ${typeInfo?.display_name || '未知'}`,
-              difficulty: ex.difficulty_level,
-              status: ex.quality_status,
-              created_by: ex.created_by,
-              // 额外字段
-              exerciseType: typeInfo?.display_name,
-              options: ex.metadata.options
-            })
-          })
-        } else if (selectedType.value === 'scenario-system') {
-          // 搜索 Scenario System 题目 (Mock)
-          const keyword = searchQuery.value.toLowerCase()
-          const matchedExercises = scenarioSystemMock.slExercises.filter(ex => 
-            (ex.metadata.question && ex.metadata.question.toLowerCase().includes(keyword)) ||
-            (ex.metadata.prompt && ex.metadata.prompt.toLowerCase().includes(keyword))
-          )
-          
-          matchedExercises.forEach(ex => {
-            const typeInfo = scenarioSystemMock.slExerciseTypes.find(t => t.id === ex.exercise_type_id)
-            const lesson = scenarioSystemMock.generatedLessons.find(l => l.lesson_db_id === ex.source_lesson_db_id)
-            
-            results.push({
-              id: ex.id,
-              type: 'scenario-system',
-              word: ex.metadata.question || ex.metadata.prompt, // 使用问题或提示作为主要显示文本
-              definition: `题型: ${typeInfo?.name || '未知'} | 来源: ${lesson?.lesson_name || '未知'}`,
-              difficulty: ex.difficulty_level,
-              created_by: ex.created_by,
-              // 额外字段
-              exerciseType: typeInfo?.name,
-              sourceLesson: lesson?.lesson_name
-            })
-          })
+        } else if (selectedType.value === 'content-system' || selectedType.value === 'scenario-system') {
+          // 题目搜索 - 待实现
+          console.log('题目搜索功能待实现')
         } else if (selectedType.value === 'audio' || selectedType.value === 'video') {
           // 音视频搜索 - 待实现
           console.log('音视频搜索功能待实现')
@@ -495,6 +453,16 @@ export default {
 
     const closeResultsModal = () => {
       showResultsModal.value = false
+    }
+
+    const openDetail = (item) => {
+      selectedItem.value = item
+      showDetailModal.value = true
+    }
+
+    const closeDetailModal = () => {
+      showDetailModal.value = false
+      selectedItem.value = null
     }
 
     return {
@@ -1083,6 +1051,173 @@ export default {
 .btn-small:hover {
   background: #66bb6a;
   color: white;
+}
+
+.btn-primary {
+  background-color: #1890ff;
+  border-color: #1890ff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #40a9ff;
+  border-color: #40a9ff;
+}
+
+/* 题目表格样式 */
+.results-table-wrapper {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.results-table th,
+.results-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.results-table th {
+  background: #fafafa;
+  font-weight: 600;
+  color: #333;
+}
+
+.results-table tr:hover {
+  background: #fafafa;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.status-1 {
+  background: #f6ffed;
+  color: #52c41a;
+  border: 1px solid #b7eb8f;
+}
+
+.status-0 {
+  background: #fffbe6;
+  color: #fa8c16;
+  border: 1px solid #ffe58f;
+}
+
+/* 详情弹窗 */
+.detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+  animation: fadeIn 0.3s;
+}
+
+.detail-modal-content {
+  background: white;
+  width: 800px;
+  max-width: 90%;
+  max-height: 90vh;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.detail-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f9f9f9;
+}
+
+.detail-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.detail-body {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.detail-section {
+  margin-bottom: 24px;
+}
+
+.detail-section h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 16px;
+  border-left: 4px solid #1890ff;
+  padding-left: 10px;
+}
+
+.detail-text {
+  background: #f9f9f9;
+  padding: 16px;
+  border-radius: 6px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: #333;
+}
+
+.detail-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option-item {
+  display: flex;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+
+.option-key {
+  font-weight: bold;
+  margin-right: 12px;
+  color: #1890ff;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+}
+
+.detail-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .btn-danger {

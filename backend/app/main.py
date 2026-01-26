@@ -21,6 +21,7 @@ from app.schemas.ciyu import CiyuResponse, CiyuListResponse, CiyuCreate, CiyuUpd
 from app.schemas.hanzi import HanziResponse, HanziListResponse, HanziCreate, HanziUpdate
 from app.schemas.common import APIResponse, PaginatedResponse, SearchParams
 from app.schemas.user import UserLogin, UserResponse, Token
+from app.api.v1.questions import router as questions_router
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -42,6 +43,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 注册路由
+app.include_router(questions_router, prefix="/api/v1", tags=["questions"])
 
 # HTTP Bearer认证
 security = HTTPBearer()

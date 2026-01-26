@@ -53,6 +53,7 @@ if settings.SSH_HOST:
 
 # 创建基础模型类
 Base = declarative_base()
+BasePG = declarative_base()
 
 
 def get_db():

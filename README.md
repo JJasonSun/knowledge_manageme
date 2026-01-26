@@ -181,7 +181,6 @@ frontend/
 │   ├── components/
 │   │   └── Header.vue              # 更新：题目模块菜单简化
 │   ├── mock/
-│   │   └── exerciseData.js         # 新增：题目模块 Mock 数据
 │   ├── router/
 │   │   └── index.js                # 更新：题目路由重构
 │   ├── stores/
@@ -213,7 +212,7 @@ frontend/
 ### 题目模块重构（2026-01）
 
 - **架构调整**：删除旧的 HSK/YCT 分类，基于数据库结构文档重构为 Content System 和 Scenario System
-- **Mock 数据**：创建完整的符合数据库结构的模拟数据（`frontend/src/mock/exerciseData.js`）
+- **数据集成**：前端已对接真实后端 API，移除 Mock 数据
 - **卡片式展示**：
   - Content System：展示题目、关联单词、媒体资源、题目详情（选项、答案、解析）
   - Scenario System：展示 AI 生成题目、来源课程、考察词汇、课程内容预览
