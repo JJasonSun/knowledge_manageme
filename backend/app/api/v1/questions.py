@@ -1,16 +1,137 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, cast, String
-from typing import Optional, List, Union
+from typing import Optional, Union, Dict, Any, List
 from uuid import UUID
+from pydantic import BaseModel
 
 from app.core.database import get_questions_db
-from app.models.question_pg import Exercise
-from app.models.scenario_pg import SLExercise
+from app.models.question_pg import Exercise, ExerciseType, SkillCategory
+from app.models.scenario_pg import SLExercise, SLExerciseType, SLSkillCategory, GeneratedLesson
 from app.schemas.question_pg import ExerciseResponse, ExerciseListResponse
 from app.schemas.scenario_pg import SLExerciseResponse, SLExerciseListResponse
 
 router = APIRouter()
+
+class MetadataUpdate(BaseModel):
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class FilterOption(BaseModel):
+    id: str
+    name: str
+    display_name: Optional[str] = None
+    description: Optional[str] = None
+    display_order: Optional[int] = None
+    skill_category_id: Optional[str] = None
+
+
+class LessonOption(BaseModel):
+    lesson_db_id: int
+    lesson_name: Optional[str] = None
+
+
+class FiltersResponse(BaseModel):
+    exercise_types: List[FilterOption]
+    skill_categories: List[FilterOption]
+    lessons: Optional[List[LessonOption]] = None
+    difficulty_levels: List[Dict[str, Any]] = [
+        {"value": 1, "label": "简单"},
+        {"value": 2, "label": "中等"},
+        {"value": 3, "label": "困难"}
+    ]
+
+
+@router.get("/questions/filters", response_model=FiltersResponse)
+async def get_question_filters(
+    source: str = Query("content_system", enum=["content_system", "scenario_system"]),
+    db: Session = Depends(get_questions_db)
+):
+    """
+    获取题目筛选选项（轻量级接口）
+    
+    - **source**: 题目来源，可选 "content_system" (默认) 或 "scenario_system"
+    
+    返回对应系统的所有可用筛选选项，包括：
+    - exercise_types: 题型列表
+    - skill_categories: 技能分类列表
+    - lessons: 课程列表（仅 scenario_system）
+    - difficulty_levels: 难度等级
+    """
+    try:
+        if source == "content_system":
+            # 获取技能分类
+            categories = db.query(SkillCategory).order_by(SkillCategory.display_order).all()
+            skill_categories = [
+                FilterOption(
+                    id=str(cat.id),
+                    name=cat.name,
+                    description=cat.description,
+                    display_order=cat.display_order
+                ) for cat in categories
+            ]
+            
+            # 获取题型
+            types = db.query(ExerciseType).order_by(ExerciseType.display_order).all()
+            exercise_types = [
+                FilterOption(
+                    id=str(t.id),
+                    name=t.name,
+                    display_name=t.display_name,
+                    description=t.description,
+                    display_order=t.display_order,
+                    skill_category_id=str(t.skill_category_id) if t.skill_category_id else None
+                ) for t in types
+            ]
+            
+            return FiltersResponse(
+                exercise_types=exercise_types,
+                skill_categories=skill_categories,
+                lessons=None
+            )
+        else:
+            # Scenario Learning System
+            # 获取技能分类
+            categories = db.query(SLSkillCategory).order_by(SLSkillCategory.display_order).all()
+            skill_categories = [
+                FilterOption(
+                    id=str(cat.id),
+                    name=cat.name,
+                    description=cat.description,
+                    display_order=cat.display_order
+                ) for cat in categories
+            ]
+            
+            # 获取题型
+            types = db.query(SLExerciseType).order_by(SLExerciseType.display_order).all()
+            exercise_types = [
+                FilterOption(
+                    id=str(t.id),
+                    name=t.name,
+                    display_name=t.display_name,
+                    description=t.description,
+                    display_order=t.display_order,
+                    skill_category_id=str(t.skill_category_id) if t.skill_category_id else None
+                ) for t in types
+            ]
+            
+            # 获取课程列表
+            lessons = db.query(GeneratedLesson).order_by(GeneratedLesson.lesson_db_id).all()
+            lesson_options = [
+                LessonOption(
+                    lesson_db_id=lesson.lesson_db_id,
+                    lesson_name=lesson.lesson_name
+                ) for lesson in lessons
+            ]
+            
+            return FiltersResponse(
+                exercise_types=exercise_types,
+                skill_categories=skill_categories,
+                lessons=lesson_options
+            )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取筛选选项失败: {str(e)}")
 
 @router.get("/questions", response_model=Union[ExerciseListResponse, SLExerciseListResponse])
 async def get_questions(
@@ -19,6 +140,7 @@ async def get_questions(
     type_id: Optional[UUID] = None,
     difficulty: Optional[int] = None,
     search: Optional[str] = None,
+    lesson_id: Optional[int] = None,
     source: str = Query("content_system", enum=["content_system", "scenario_system"]),
     db: Session = Depends(get_questions_db)
 ):
@@ -70,6 +192,9 @@ async def get_questions(
             
             if difficulty:
                 query = query.filter(SLExercise.difficulty_level == difficulty)
+            
+            if lesson_id:
+                query = query.filter(SLExercise.source_lesson_db_id == lesson_id)
                 
             if search:
                 search_term = f"%{search}%"
@@ -141,3 +266,45 @@ async def get_question(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取题目详情失败: {str(e)}")
+
+
+@router.patch("/questions/{question_id}/metadata")
+async def update_question_metadata(
+    question_id: UUID,
+    data: MetadataUpdate,
+    source: str = Query("content_system", enum=["content_system", "scenario_system"]),
+    db: Session = Depends(get_questions_db)
+):
+    """
+    更新题目的 metadata 字段
+    
+    - **source**: 题目来源，可选 "content_system" (默认) 或 "scenario_system"
+    - **metadata**: 新的 metadata JSON 数据
+    """
+    try:
+        if source == "content_system":
+            exercise = db.query(Exercise).filter(Exercise.id == question_id).first()
+            if not exercise:
+                raise HTTPException(status_code=404, detail="题目不存在")
+            
+            exercise.exercise_metadata = data.metadata
+            db.commit()
+            db.refresh(exercise)
+            
+            return {"id": str(exercise.id), "metadata": exercise.exercise_metadata}
+        else:
+            exercise = db.query(SLExercise).filter(SLExercise.id == question_id).first()
+            if not exercise:
+                raise HTTPException(status_code=404, detail="题目不存在")
+            
+            exercise.exercise_metadata = data.metadata
+            db.commit()
+            db.refresh(exercise)
+            
+            return {"id": str(exercise.id), "metadata": exercise.exercise_metadata}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"更新 metadata 失败: {str(e)}")

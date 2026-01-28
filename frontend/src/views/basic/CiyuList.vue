@@ -2,26 +2,24 @@
   <div>
     <Header />
     <div class="container">
-      <div class="page-header">
-        <h2>词语管理</h2>
-        <div class="header-actions">
-          <div class="permission-info">
-            <small>💡 操作说明：只能编辑/删除自己创建的资源</small>
-          </div>
-          <button class="btn btn-add" @click="showCreateModal = true">+ 添加词语</button>
-        </div>
-      </div>
+      <PageHeader
+        icon="📖"
+        title="词语管理"
+        subtitle="词语基础知识库"
+        variant="green"
+        :showAddButton="true"
+        addButtonText="添加词语"
+        :showPermissionTip="true"
+        @add="showCreateModal = true"
+      />
       
-      <div class="search-box">
-        <input 
-          v-model="searchQuery" 
-          type="text" 
-          class="search-input"
-          placeholder="搜索词语..."
-          @keyup.enter="handleSearch"
-        >
-        <button class="btn btn-primary" @click="handleSearch" :disabled="loading">搜索</button>
-      </div>
+      <SearchBar
+        v-model="searchQuery"
+        placeholder="搜索词语..."
+        variant="green"
+        :loading="loading"
+        @search="handleSearch"
+      />
       
       <table class="table" v-if="!loading && ciyuList.length > 0">
         <thead>
@@ -217,12 +215,14 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import Header from '../../components/Header.vue'
+import PageHeader from '../../components/PageHeader.vue'
+import SearchBar from '../../components/SearchBar.vue'
 import request from '../../utils/request'
 import { useAuthStore } from '../../stores/auth'
 
 export default {
   name: 'CiyuList',
-  components: { Header },
+  components: { Header, PageHeader, SearchBar },
   setup() {
     const authStore = useAuthStore()
     const ciyuList = ref([])

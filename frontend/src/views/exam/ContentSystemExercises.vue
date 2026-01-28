@@ -10,58 +10,16 @@
       </div>
 
       <!-- 筛选区域 -->
-      <div class="filter-section">
-        <div class="filter-row">
-          <div class="filter-item">
-            <label>技能分类：</label>
-            <select v-model="filters.skillCategory" class="filter-select">
-              <option value="">全部</option>
-              <option v-for="cat in skillCategories" :key="cat.id" :value="cat.id">
-                {{ cat.description }}
-              </option>
-            </select>
-          </div>
-          
-          <div class="filter-item">
-            <label>题型：</label>
-            <select v-model="filters.exerciseType" class="filter-select">
-              <option value="">全部</option>
-              <option v-for="type in filteredExerciseTypes" :key="type.id" :value="type.id">
-                {{ type.display_name }}
-              </option>
-            </select>
-          </div>
-          
-          <div class="filter-item">
-            <label>难度：</label>
-            <select v-model="filters.difficulty" class="filter-select">
-              <option value="">全部</option>
-              <option value="1">简单</option>
-              <option value="2">中等</option>
-              <option value="3">困难</option>
-            </select>
-          </div>
-          
-          <div class="filter-item">
-            <label>质检状态：</label>
-            <select v-model="filters.qualityStatus" class="filter-select">
-              <option value="">全部</option>
-              <option value="1">已通过</option>
-              <option value="0">待审核</option>
-              <option value="-1">已驳回</option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="search-box">
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            class="search-input"
-            placeholder="搜索题目内容..."
-          >
-        </div>
-      </div>
+      <ExerciseFilterBar
+        variant="green"
+        v-model:filters="filters"
+        v-model:searchQuery="searchQuery"
+        :skillCategories="skillCategories"
+        :exerciseTypes="filteredExerciseTypes"
+        :showSkillCategory="true"
+        :showQualityStatus="true"
+        @search="handleSearch"
+      />
 
       <!-- 统计信息 -->
       <div class="stats-section">
@@ -77,436 +35,129 @@
 
       <div class="exercises-section">
         <h3>📝 题目详情</h3>
-        <div v-if="filteredExercises.length > 0" class="cards-grid">
-          <div v-for="exercise in filteredExercises" :key="exercise.id" class="exercise-card">
-            <div class="card-header">
-              <div class="header-left">
-                <span class="type-badge">{{ getExerciseTypeName(exercise.exercise_type_id) }}</span>
+        
+        <!-- 骨架屏加载状态 -->
+        <div v-if="loading" class="cards-grid">
+          <SkeletonCard v-for="i in 6" :key="'skeleton-' + i" variant="green" />
+        </div>
+        
+        <div v-else-if="filteredExercises.length > 0" class="cards-grid">
+          <ExerciseCard
+            v-for="exercise in filteredExercises"
+            :key="exercise.id"
+            variant="green"
+          >
+            <template #left>
+              <span class="type-badge">{{ getExerciseTypeName(exercise.exercise_type_id) }}</span>
+            </template>
+            <template #right>
+              <span class="difficulty-badge" :class="getDifficultyClass(exercise.difficulty_level)">
+                {{ getDifficultyText(exercise.difficulty_level) }}
+              </span>
+              <span class="status-badge" :class="getQualityClass(exercise.quality_status)">
+                {{ getQualityText(exercise.quality_status) }}
+              </span>
+            </template>
+
+            <div class="exercise-prompt">
+              {{ getExercisePrompt(exercise) }}
+            </div>
+
+            <div class="word-info">
+              <div class="info-label">
+                🔤 关联单词：{{ getWordDisplay(exercise) }}
               </div>
-              <div class="header-right">
-                <span class="difficulty-badge" :class="getDifficultyClass(exercise.difficulty_level)">
-                  {{ getDifficultyText(exercise.difficulty_level) }}
-                </span>
-                <span class="status-badge" :class="getQualityClass(exercise.quality_status)">
-                  {{ getQualityText(exercise.quality_status) }}
-                </span>
+              <div v-if="getWordPinyin(exercise)" class="word-sub">拼音：{{ getWordPinyin(exercise) }}</div>
+              <div v-if="getWordTranslation(exercise)" class="word-sub">释义：{{ getWordTranslation(exercise) }}</div>
+              <div v-if="getWordHskLevel(exercise)" class="word-sub">HSK：{{ getWordHskLevel(exercise) }}</div>
+            </div>
+
+            <div class="exercise-info">
+              <div class="info-row">
+                <span class="info-icon">📂</span>
+                <span class="info-text">技能分类：{{ getSkillCategoryName(exercise) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">🏷️</span>
+                <span class="info-text">题型：{{ getExerciseTypeName(exercise.exercise_type_id) }}</span>
+              </div>
+              <div class="info-row" v-if="exercise.parent_exercise_id">
+                <span class="info-icon">🔗</span>
+                <span class="info-text">包含子题</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">🕐</span>
+                <span class="info-text">{{ formatDate(exercise.created_at) }}</span>
               </div>
             </div>
 
-            <div class="card-body">
-              <div class="exercise-prompt">
-                {{ getExercisePrompt(exercise) }}
+            <details class="id-details">
+              <summary class="id-summary">🔧 开发者信息</summary>
+              <div class="id-content">
+                <div class="id-item"><span>题目ID:</span><code>{{ exercise.id }}</code></div>
+                <div class="id-item" v-if="exercise.parent_exercise_id"><span>父题ID:</span><code>{{ exercise.parent_exercise_id }}</code></div>
+                <div class="id-item"><span>题型ID:</span><code>{{ exercise.exercise_type_id }}</code></div>
+                <div class="id-item" v-if="exercise.word_id"><span>单词ID:</span><code>{{ exercise.word_id }}</code></div>
               </div>
+            </details>
 
-              <div class="word-info">
-                <div class="info-label">
-                  🔤 关联单词：{{ getWordDisplay(exercise) }}
-                </div>
-                <div v-if="getWordPinyin(exercise)" class="word-sub">拼音：{{ getWordPinyin(exercise) }}</div>
-                <div v-if="getWordTranslation(exercise)" class="word-sub">释义：{{ getWordTranslation(exercise) }}</div>
-                <div v-if="getWordHskLevel(exercise)" class="word-sub">HSK：{{ getWordHskLevel(exercise) }}</div>
+            <details class="meta-details" open>
+              <summary class="meta-summary">📋 metadata (JSON)
+                <span class="meta-actions">
+                  <template v-if="!editingMetadata[exercise.id]">
+                    <button class="btn-small" @click.stop="startEditMetadata(exercise.id)">✏️ 编辑</button>
+                    <button class="btn-small" @click.stop="copyMetadata(exercise.id)">📋 复制</button>
+                  </template>
+                  <template v-else>
+                    <button class="btn-small primary" @click.stop="saveMetadata(exercise)">💾 保存</button>
+                    <button class="btn-small" @click.stop="cancelEditMetadata(exercise)">❌ 取消</button>
+                  </template>
+                </span>
+              </summary>
+              <textarea
+                v-if="editingMetadata[exercise.id]"
+                class="json-editor"
+                :placeholder="'{}'"
+                v-model="metadataDrafts[exercise.id]"
+              ></textarea>
+              <pre v-else class="json-preview">{{ metadataDrafts[exercise.id] || '{}' }}</pre>
+              <div v-if="metadataErrors[exercise.id]" class="error-text">
+                {{ metadataErrors[exercise.id] }}
               </div>
+            </details>
 
-              <div class="exercise-meta">
-                <div class="meta-item">
-                  <span class="meta-label">题型：</span>
-                  <span class="meta-value">{{ getExerciseTypeName(exercise.exercise_type_id) }}</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">技能分类：</span>
-                  <span class="meta-value">{{ getSkillCategoryName(exercise) }}</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">创建时间：</span>
-                  <span class="meta-value">{{ formatDate(exercise.created_at) }}</span>
-                </div>
-              </div>
-
-              <div class="metadata-section" v-if="exercise.metadata">
-                <div class="info-label">📋 题目详情：</div>
-                <div class="metadata-content">
-                  <template v-if="isListenQa(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">听力原文</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.listening_text, '无听力原文信息') }}</div>
-                    </div>
-                    <div class="meta-block">
-                      <div class="meta-title">问题</div>
-                      <div class="meta-text">
-                        {{ getTextValue(exercise.metadata.question, '无问题信息') }}
-                        <span v-if="exercise.metadata.question_pinyin" class="pinyin-text">{{ exercise.metadata.question_pinyin }}</span>
-                      </div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.options && exercise.metadata.options.length">
-                      <div class="meta-title">选项</div>
-                      <div class="options-list">
-                        <div v-for="(option, idx) in exercise.metadata.options" :key="idx" class="option-item">
-                          <span class="option-key">{{ getOptionLabel(option, idx) }}.</span>
-                          <span class="option-text">{{ getOptionText(option) }}</span>
-                          <span v-if="option.pinyin" class="option-pinyin">{{ option.pinyin }}</span>
-                          <span v-if="exercise.metadata.correct_label && getOptionLabel(option, idx) === exercise.metadata.correct_label" class="correct-mark">✓</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">正确答案：{{ getTextValue(exercise.metadata.correct_label, '无答案信息') }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isListenSentenceTf(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">听力原文</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.listening_text, '无听力原文信息') }}</div>
-                    </div>
-                    <div class="meta-block">
-                      <div class="meta-title">判断句</div>
-                      <div class="meta-text">
-                        {{ getTextValue(exercise.metadata.statement, '无判断句信息') }}
-                        <span v-if="exercise.metadata.statement_pinyin" class="pinyin-text">{{ exercise.metadata.statement_pinyin }}</span>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">答案：{{ formatBoolean(exercise.metadata.correct_answer) }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isListenImageTrueFalse(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">听力原文</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.listening_text, '无听力原文信息') }}</div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">答案：{{ formatBoolean(exercise.metadata.correct_answer) }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isListenImageMc(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">听力原文</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.listening_text, '无听力原文信息') }}</div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.options && exercise.metadata.options.length">
-                      <div class="meta-title">选项</div>
-                      <div class="options-list">
-                        <div v-for="(option, idx) in exercise.metadata.options" :key="idx" class="option-item">
-                          <span class="option-key">{{ getOptionLabel(option, idx) }}.</span>
-                          <span class="option-text">{{ getTextValue(option.keyword, '无关键词信息') }}</span>
-                          <span class="option-pinyin">{{ getTextValue(option.image_asset_id, '无图片资源信息') }}</span>
-                          <span v-if="exercise.metadata.correct_answer && getOptionLabel(option, idx) === exercise.metadata.correct_answer" class="correct-mark">✓</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">正确答案：{{ getTextValue(exercise.metadata.correct_answer, '无答案信息') }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isListenImageMatch(exercise)">
-                    <div class="meta-block" v-if="exercise.metadata.listening_text">
-                      <div class="meta-title">听力原文</div>
-                      <div class="meta-text">{{ exercise.metadata.listening_text }}</div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.keywords && exercise.metadata.keywords.length">
-                      <div class="meta-title">关键词</div>
-                      <div class="meta-list">
-                        <div v-for="(keyword, idx) in exercise.metadata.keywords" :key="idx" class="meta-item-card">{{ keyword }}</div>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">正确图片序号：{{ getTextValue(getCorrectImageIndex(exercise.metadata), '无答案信息') }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isReadImageMatch(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">词语</div>
-                      <div class="meta-text">
-                        {{ getTextValue(exercise.metadata.word, '无词语信息') }}
-                        <span v-if="exercise.metadata.pinyin" class="pinyin-text">{{ exercise.metadata.pinyin }}</span>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">正确图片序号：{{ getTextValue(getCorrectImageIndex(exercise.metadata), '无答案信息') }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isReadImageTrueFalse(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">词语</div>
-                      <div class="meta-text">
-                        {{ getTextValue(exercise.metadata.word, '无词语信息') }}
-                        <span v-if="exercise.metadata.pinyin" class="pinyin-text">{{ exercise.metadata.pinyin }}</span>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">答案：{{ formatBoolean(exercise.metadata.correct_answer) }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isReadDialogueMatch(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">对话</div>
-                      <div class="meta-text">
-                        {{ getTextValue(exercise.metadata.utterance, '无问题信息') }}
-                        <span v-if="exercise.metadata.utter_pinyin" class="pinyin-text">{{ exercise.metadata.utter_pinyin }}</span>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <div class="meta-title">回答</div>
-                      <div class="meta-text">
-                        {{ getTextValue(exercise.metadata.reply, '无回答信息') }}
-                        <span v-if="exercise.metadata.reply_pinyin" class="pinyin-text">{{ exercise.metadata.reply_pinyin }}</span>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">配对序号：{{ getTextValue(exercise.metadata.pair_index, '无配对信息') }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isReadParagraphComprehension(exercise)">
-                    <div class="meta-block" v-if="exercise.metadata.passage">
-                      <div class="meta-title">阅读材料</div>
-                      <div class="meta-text">{{ exercise.metadata.passage }}</div>
-                    </div>
-                    <div class="meta-block">
-                      <div class="meta-title">问题</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.question, '无问题信息') }}</div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.options && exercise.metadata.options.length">
-                      <div class="meta-title">选项</div>
-                      <div class="options-list">
-                        <div v-for="(option, idx) in exercise.metadata.options" :key="idx" class="option-item">
-                          <span class="option-key">{{ getOptionLabel(option, idx) }}.</span>
-                          <span class="option-text">{{ getOptionText(option) }}</span>
-                          <span v-if="exercise.metadata.correct_label && getOptionLabel(option, idx) === exercise.metadata.correct_label" class="correct-mark">✓</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">正确答案：{{ getTextValue(exercise.metadata.correct_label, '无答案信息') }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isReadSentenceComprehensionChoice(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">阅读材料</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.passage, '无阅读材料信息') }}</div>
-                    </div>
-                    <div class="meta-block">
-                      <div class="meta-title">问题</div>
-                      <div class="meta-text">
-                        {{ getTextValue(exercise.metadata.question, '无问题信息') }}
-                        <span v-if="exercise.metadata.question_pinyin" class="pinyin-text">{{ exercise.metadata.question_pinyin }}</span>
-                      </div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.options && exercise.metadata.options.length">
-                      <div class="meta-title">选项</div>
-                      <div class="options-list">
-                        <div v-for="(option, idx) in exercise.metadata.options" :key="idx" class="option-item">
-                          <span class="option-key">{{ getOptionLabel(option, idx) }}.</span>
-                          <span class="option-text">{{ getOptionText(option) }}</span>
-                          <span v-if="option.pinyin" class="option-pinyin">{{ option.pinyin }}</span>
-                          <span v-if="exercise.metadata.correct_label && getOptionLabel(option, idx) === exercise.metadata.correct_label" class="correct-mark">✓</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">正确答案：{{ getTextValue(exercise.metadata.correct_label, '无答案信息') }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isReadSentenceTf(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">阅读材料</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.passage, '无阅读材料信息') }}</div>
-                    </div>
-                    <div class="meta-block">
-                      <div class="meta-title">判断句</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.statement, '无判断句信息') }}</div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">答案：{{ formatBoolean(exercise.metadata.correct_answer) }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isReadSentenceTranslation(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">中文</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.sentence_cn, '无中文信息') }}</div>
-                    </div>
-                    <div class="meta-block">
-                      <div class="meta-title">英文</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.sentence_en, '无英文信息') }}</div>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isReadWordGapFill(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">题干</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.content?.text, '无题干信息') }}</div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.content?.prompt">
-                      <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ exercise.metadata.content.prompt }}</div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.content?.blanks && exercise.metadata.content.blanks.length">
-                      <div class="meta-title">填空选项</div>
-                      <div class="meta-list">
-                        <div v-for="(blank, idx) in exercise.metadata.content.blanks" :key="idx" class="meta-item-card">
-                          <div class="meta-subtitle">空{{ getTextValue(blank.blankIndex, idx) }}</div>
-                          <div class="options-list">
-                            <div v-for="opt in getBlankOptions(blank)" :key="opt.key" class="option-item">
-                              <span class="option-key">{{ opt.key }}.</span>
-                              <span class="option-text">{{ getTextValue(opt.text, '无选项信息') }}</span>
-                              <span v-if="opt.pinyin" class="option-pinyin">{{ opt.pinyin }}</span>
-                              <span v-if="getBlankCorrectAnswer(blank, exercise.metadata.content, idx) === opt.key" class="correct-mark">✓</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isReadSentenceOrder(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">段落</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.paragraph, '无段落信息') }}</div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.pieces_original && exercise.metadata.pieces_original.length">
-                      <div class="meta-title">原始句子</div>
-                      <div class="meta-list">
-                        <div v-for="piece in exercise.metadata.pieces_original" :key="piece.id" class="meta-item-card">
-                          <div>{{ piece.text }}</div>
-                          <div v-if="piece.pinyin" class="pinyin-text">{{ piece.pinyin }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.pieces_shuffled_label_map">
-                      <div class="meta-title">打乱句子</div>
-                      <div class="meta-list">
-                        <div v-for="piece in getShuffledPieces(exercise.metadata.pieces_shuffled_label_map)" :key="piece.label" class="meta-item-card">
-                          <div>{{ piece.label }}. {{ piece.text }}</div>
-                          <div v-if="piece.pinyin" class="pinyin-text">{{ piece.pinyin }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">正确顺序：{{ formatOrder(exercise.metadata.answer_order) }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isReadWordOrder(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">目标句子</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.sentence, '无句子信息') }}</div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.pieces_original && exercise.metadata.pieces_original.length">
-                      <div class="meta-title">原始词语</div>
-                      <div class="meta-list">
-                        <div v-for="piece in exercise.metadata.pieces_original" :key="piece.id" class="meta-item-card">
-                          <div>{{ piece.text }}</div>
-                          <div v-if="piece.pinyin" class="pinyin-text">{{ piece.pinyin }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.pieces_shuffled_label_map">
-                      <div class="meta-title">打乱词语</div>
-                      <div class="meta-list">
-                        <div v-for="piece in getShuffledPieces(exercise.metadata.pieces_shuffled_label_map)" :key="piece.label" class="meta-item-card">
-                          <div>{{ piece.label }}. {{ piece.text }}</div>
-                          <div v-if="piece.pinyin" class="pinyin-text">{{ piece.pinyin }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">正确顺序：{{ formatOrder(exercise.metadata.answer_order) }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isTranslateWordOrder(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">原句</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.content?.originalSentence, '无原句信息') }}</div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.content?.prompt">
-                      <div class="meta-title">提示</div>
-                      <div class="meta-text">{{ exercise.metadata.content.prompt }}</div>
-                    </div>
-                    <div class="meta-block" v-if="exercise.metadata.content?.words && exercise.metadata.content.words.length">
-                      <div class="meta-title">词语</div>
-                      <div class="meta-list">
-                        <div v-for="(word, idx) in exercise.metadata.content.words" :key="idx" class="meta-item-card">
-                          {{ word.label }}. {{ word.word }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">正确顺序：{{ formatOrder(exercise.metadata.correctAnswer) }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isSpeakFollow(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">句子</div>
-                      <div class="meta-text">
-                        {{ getTextValue(exercise.metadata.sentence, '无句子信息') }}
-                        <span v-if="exercise.metadata.pinyin" class="pinyin-text">{{ exercise.metadata.pinyin }}</span>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">音频资源：{{ getTextValue(exercise.metadata.audio_asset_id, '无音频资源信息') }}</span>
-                    </div>
-                  </template>
-
-                  <template v-else-if="isStrokeOrderWriting(exercise)">
-                    <div class="meta-block">
-                      <div class="meta-title">汉字</div>
-                      <div class="meta-text">
-                        {{ getTextValue(exercise.metadata.character, '无汉字信息') }}
-                        <span v-if="exercise.metadata.pinyin" class="pinyin-text">{{ exercise.metadata.pinyin }}</span>
-                      </div>
-                    </div>
-                    <div class="meta-block">
-                      <div class="meta-title">释义</div>
-                      <div class="meta-text">{{ getTextValue(exercise.metadata.definition, '无释义信息') }}</div>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">笔顺动图：{{ getTextValue(exercise.metadata.animation, '无动图信息') }}</span>
-                    </div>
-                    <div class="meta-block">
-                      <span class="answer-badge">笔顺图片：{{ getTextValue(exercise.metadata.stroke_image_url, '无图片信息') }}</span>
-                    </div>
-                  </template>
-
-                  <pre class="json-view" v-else>{{ JSON.stringify(exercise.metadata, null, 2) }}</pre>
-                </div>
-              </div>
-
-              <div v-if="getExerciseMedia(exercise.id).length > 0" class="media-section">
-                <div class="info-label">🎬 关联媒体：</div>
-                <div class="media-list">
-                  <div v-for="media in getExerciseMedia(exercise.id)" :key="media.id" class="media-item">
-                    <span class="media-icon">{{ media.file_type === 'audio' ? '🔊' : '🖼️' }}</span>
+            <div v-if="getExerciseMedia(exercise.id).length > 0" class="media-section">
+              <div class="info-label">🎬 关联媒体：</div>
+              <div class="media-list">
+                <div v-for="media in getExerciseMedia(exercise.id)" :key="media.id" class="media-item-wrapper">
+                  <div class="media-item">
+                    <span class="media-icon">{{ media.file_type === 'audio' ? '🔊' : (media.file_type === 'video' ? '🎬' : '🖼️') }}</span>
                     <span class="media-name">{{ getMediaName(media) }}</span>
                     <span class="media-role">{{ getMediaRoleName(media.usage_role) }}</span>
                     <span class="media-type">{{ media.mime_type }}</span>
                   </div>
+                  <div v-if="media.file_url" class="media-preview-container">
+                    <img v-if="media.file_type === 'image'" :src="media.file_url" class="media-preview-img" @error="handleMediaError($event, 'image')" />
+                    <audio v-else-if="media.file_type === 'audio'" :src="media.file_url" controls class="media-preview-audio" @error="handleMediaError($event, 'audio')" />
+                    <video v-else-if="media.file_type === 'video'" :src="media.file_url" controls class="media-preview-video" @error="handleMediaError($event, 'video')" />
+                  </div>
+                  <div v-else class="media-no-url">⚠️ 无媒体地址</div>
                 </div>
               </div>
             </div>
-
-
-          </div>
+          </ExerciseCard>
         </div>
-        
-        <div v-else class="empty-state">
+      </div>
+
+      <div v-if="!loading" class="exercises-section">
+        <div v-if="filteredExercises.length === 0" class="empty-state">
           <div class="empty-icon">📝</div>
           <h3>暂无题目数据</h3>
           <p>{{ searchQuery ? '没有找到匹配的题目' : '暂无题目' }}</p>
         </div>
       </div>
 
-      <div class="pagination" v-if="totalPages > 1">
+      <div class="pagination" v-if="totalPages > 1 && !loading">
         <button class="btn" @click="goToPage(1)" :disabled="currentPage <= 1">首页</button>
         <button class="btn" @click="goToPage(currentPage - 1)" :disabled="currentPage <= 1">上一页</button>
         <div class="page-info">第 {{ currentPage }} / {{ totalPages }} 页</div>
@@ -521,15 +172,23 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import Header from '../../components/Header.vue'
+import ExerciseCard from '../../components/ExerciseCard.vue'
+import ExerciseFilterBar from '../../components/ExerciseFilterBar.vue'
+import SkeletonCard from '../../components/SkeletonCard.vue'
 import request from '../../utils/request'
 
 export default {
   name: 'ContentSystemExercises',
   components: {
-    Header
+    Header,
+    ExerciseCard,
+    ExerciseFilterBar,
+    SkeletonCard
   },
   setup() {
     const searchQuery = ref('')
+    const loading = ref(true)
+    const filtersLoading = ref(true)
     
     // 筛选条件
     const filters = ref({
@@ -544,9 +203,14 @@ export default {
     const currentPage = ref(1)
     const pageSize = ref(6)
     const total = ref(0)
+    const metadataDrafts = ref({})
+    const metadataOriginals = ref({})
+    const metadataErrors = ref({})
+    const editingMetadata = ref({})
 
     // 获取题目数据
     const fetchExercises = async () => {
+      loading.value = true
       try {
         const params = {
           source: 'content_system',
@@ -568,46 +232,59 @@ export default {
         if (res.data) {
           exercises.value = res.data.items || []
           total.value = res.data.total || 0
+          initMetadataDrafts()
         }
       } catch (error) {
         console.error('获取题目失败:', error)
+      } finally {
+        loading.value = false
       }
     }
 
-    onMounted(() => {
-      fetchExercises()
+    // 使用专用筛选接口
+    const allExerciseTypes = ref([])
+    const allSkillCategories = ref([])
+    
+    const fetchFilterOptions = async () => {
+      filtersLoading.value = true
+      try {
+        const res = await request.get('/v1/questions/filters', { 
+          params: { source: 'content_system' } 
+        })
+        if (res.data) {
+          allExerciseTypes.value = res.data.exercise_types || []
+          allSkillCategories.value = res.data.skill_categories || []
+        }
+      } catch (error) {
+        console.error('获取筛选选项失败:', error)
+      } finally {
+        filtersLoading.value = false
+      }
+    }
+
+    onMounted(async () => {
+      // 并行加载筛选选项和数据
+      await Promise.all([fetchFilterOptions(), fetchExercises()])
     })
 
+    // 筛选条件变化时自动搜索（不包括搜索关键词）
     watch(
-      [() => filters.value.exerciseType, () => filters.value.difficulty, () => searchQuery.value],
+      [() => filters.value.exerciseType, () => filters.value.difficulty],
       () => {
         currentPage.value = 1
         fetchExercises()
       }
     )
     
-    // 根据技能分类筛选题型
-    const exerciseTypes = computed(() => {
-      const map = new Map()
-      exercises.value.forEach(ex => {
-        const type = ex.exercise_type
-        if (type && type.id !== undefined && type.id !== null && !map.has(type.id)) {
-          map.set(type.id, type)
-        }
-      })
-      return Array.from(map.values())
-    })
-
-    const skillCategories = computed(() => {
-      const map = new Map()
-      exercises.value.forEach(ex => {
-        const category = ex.exercise_type?.skill_category || ex.skill_category
-        if (category && category.id !== undefined && category.id !== null && !map.has(category.id)) {
-          map.set(category.id, category)
-        }
-      })
-      return Array.from(map.values())
-    })
+    // 搜索按钮点击处理
+    const handleSearch = () => {
+      currentPage.value = 1
+      fetchExercises()
+    }
+    
+    // 使用预加载的筛选选项
+    const exerciseTypes = computed(() => allExerciseTypes.value)
+    const skillCategories = computed(() => allSkillCategories.value)
 
     const filteredExerciseTypes = computed(() => {
       if (!filters.value.skillCategory) return exerciseTypes.value
@@ -669,8 +346,6 @@ export default {
 
     const getExercisePrompt = (exercise) => {
       if (!exercise) return '无题干信息'
-      if (exercise.metadata && exercise.metadata.question) return exercise.metadata.question
-      if (exercise.metadata && exercise.metadata.prompt) return exercise.metadata.prompt
       return exercise.prompt || '无题干信息'
     }
 
@@ -745,92 +420,109 @@ export default {
       return media.title || media.file_name || media.original_name || media.name || '无媒体名称信息'
     }
     
-    const getExerciseTypeKey = (exercise) => {
-      return exercise?.exercise_type?.name || ''
-    }
-
-    const isListenQa = (exercise) => {
-      return ['LISTEN_DIALOGUE_QA', 'LISTEN_PARAGRAPH_QA', 'LISTEN_SENTENCE_QA'].includes(getExerciseTypeKey(exercise))
-    }
-
-    const isListenSentenceTf = (exercise) => getExerciseTypeKey(exercise) === 'LISTEN_SENTENCE_TF'
-    const isListenImageTrueFalse = (exercise) => getExerciseTypeKey(exercise) === 'LISTEN_IMAGE_TRUE_FALSE'
-    const isListenImageMc = (exercise) => getExerciseTypeKey(exercise) === 'LISTEN_IMAGE_MC'
-    const isListenImageMatch = (exercise) => getExerciseTypeKey(exercise) === 'LISTEN_IMAGE_MATCH'
-    const isReadImageMatch = (exercise) => getExerciseTypeKey(exercise) === 'READ_IMAGE_MATCH'
-    const isReadImageTrueFalse = (exercise) => getExerciseTypeKey(exercise) === 'READ_IMAGE_TRUE_FALSE'
-    const isReadDialogueMatch = (exercise) => getExerciseTypeKey(exercise) === 'READ_DIALOGUE_MATCH'
-    const isReadParagraphComprehension = (exercise) => getExerciseTypeKey(exercise) === 'READ_PARAGRAPH_COMPREHENSION'
-    const isReadSentenceComprehensionChoice = (exercise) => getExerciseTypeKey(exercise) === 'READ_SENTENCE_COMPREHENSION_CHOICE'
-    const isReadSentenceTf = (exercise) => getExerciseTypeKey(exercise) === 'READ_SENTENCE_TF'
-    const isReadSentenceTranslation = (exercise) => getExerciseTypeKey(exercise) === 'READ_SENTENCE_TRANSLATION'
-    const isReadWordGapFill = (exercise) => getExerciseTypeKey(exercise) === 'READ_WORD_GAP_FILL'
-    const isReadSentenceOrder = (exercise) => getExerciseTypeKey(exercise) === 'READ_SENTENCE_ORDER'
-    const isReadWordOrder = (exercise) => getExerciseTypeKey(exercise) === 'READ_WORD_ORDER'
-    const isTranslateWordOrder = (exercise) => getExerciseTypeKey(exercise) === 'TRANSLATE_WORD_ORDER'
-    const isSpeakFollow = (exercise) => getExerciseTypeKey(exercise) === 'SPEAK_FOLLOW'
-    const isStrokeOrderWriting = (exercise) => getExerciseTypeKey(exercise) === 'STROKE_ORDER_WRITING'
-
-    const getTextValue = (value, fallback) => {
-      if (value === undefined || value === null || value === '') return fallback
-      return value
-    }
-
-    const formatBoolean = (value) => {
-      if (value === true) return '正确'
-      if (value === false) return '错误'
-      return '无判断信息'
-    }
-
-    const getOptionLabel = (option, index) => {
-      return option?.label || option?.key || String.fromCharCode(65 + index)
-    }
-
-    const getOptionText = (option) => {
-      if (option && typeof option === 'object') {
-        return option.text || option.keyword || option.word || option.value || '无选项信息'
+    const normalizeMetadata = (metadata) => {
+      if (!metadata) return {}
+      if (typeof metadata === 'string') {
+        try {
+          return JSON.parse(metadata)
+        } catch (error) {
+          return {}
+        }
       }
-      return option || '无选项信息'
+      return metadata
     }
 
-    const getCorrectImageIndex = (metadata) => {
-      if (!metadata) return ''
-      return metadata.correct_image_index ?? metadata.correctImageIndex ?? metadata.correct_answer ?? metadata.correctAnswer ?? ''
+    const formatJson = (metadata) => {
+      const value = normalizeMetadata(metadata)
+      return JSON.stringify(value ?? {}, null, 2)
     }
 
-    const getBlankOptions = (blank) => {
-      const options = blank?.options || {}
-      return Object.keys(options).map(key => ({
-        key,
-        text: options[key]?.text,
-        pinyin: options[key]?.pinyin
-      }))
+    const initMetadataDrafts = () => {
+      exercises.value.forEach(ex => {
+        const id = ex.id
+        const content = formatJson(ex.metadata)
+        metadataOriginals.value[id] = content
+        if (!metadataDrafts.value[id]) {
+          metadataDrafts.value[id] = content
+        }
+      })
     }
 
-    const getBlankCorrectAnswer = (blank, content, index) => {
-      if (blank?.correctAnswer) return blank.correctAnswer
-      const key = blank?.blankIndex ?? index
-      if (content?.correctAnswer && content.correctAnswer[key] !== undefined) {
-        return content.correctAnswer[key]
+    const parseMetadataDraft = (id) => {
+      const raw = metadataDrafts.value[id]
+      if (!raw || raw.trim() === '') return null
+      try {
+        return JSON.parse(raw)
+      } catch (error) {
+        metadataErrors.value[id] = 'JSON 格式错误，请检查括号/逗号。'
+        return undefined
       }
-      if (content?.correctAnswer && content.correctAnswer[String(key)] !== undefined) {
-        return content.correctAnswer[String(key)]
+    }
+
+    const formatMetadata = (id) => {
+      const parsed = parseMetadataDraft(id)
+      if (parsed === undefined) return
+      metadataDrafts.value[id] = JSON.stringify(parsed ?? {}, null, 2)
+      metadataErrors.value[id] = ''
+    }
+
+    const saveMetadata = async (exercise) => {
+      const parsed = parseMetadataDraft(exercise.id)
+      if (parsed === undefined) return
+      try {
+        const res = await request.patch(`/v1/questions/${exercise.id}/metadata`,
+          { metadata: parsed },
+          { params: { source: 'content_system' } }
+        )
+        if (res.data) {
+          exercise.metadata = res.data.metadata ?? parsed
+          const content = formatJson(exercise.metadata)
+          metadataOriginals.value[exercise.id] = content
+          metadataDrafts.value[exercise.id] = content
+          metadataErrors.value[exercise.id] = ''
+          editingMetadata.value[exercise.id] = false
+        }
+      } catch (error) {
+        console.error('保存 metadata 失败:', error)
+        metadataErrors.value[exercise.id] = error.response?.data?.detail || '保存失败'
       }
-      return ''
     }
 
-    const getShuffledPieces = (map) => {
-      if (!map) return []
-      return Object.keys(map).map(label => ({
-        label,
-        text: map[label]?.text,
-        pinyin: map[label]?.pinyin
-      }))
+    const startEditMetadata = (id) => {
+      editingMetadata.value[id] = true
+      // 进入编辑时格式化JSON
+      formatMetadata(id)
     }
 
-    const formatOrder = (order) => {
-      if (Array.isArray(order)) return order.join(' ')
-      return getTextValue(order, '无答案信息')
+    const cancelEditMetadata = (exercise) => {
+      resetMetadata(exercise)
+      editingMetadata.value[exercise.id] = false
+    }
+
+    const handleMediaError = (event, type) => {
+      console.warn(`媒体加载失败 (${type}):`, event.target.src)
+      event.target.style.display = 'none'
+      // 可以在这里添加错误提示
+    }
+
+    const resetMetadata = (exercise) => {
+      const content = metadataOriginals.value[exercise.id] ?? formatJson(exercise.metadata)
+      metadataDrafts.value[exercise.id] = content
+      metadataErrors.value[exercise.id] = ''
+    }
+
+    const clearMetadata = (id) => {
+      metadataDrafts.value[id] = ''
+      metadataErrors.value[id] = ''
+    }
+
+    const copyMetadata = async (id) => {
+      const text = metadataDrafts.value[id] ?? ''
+      try {
+        await navigator.clipboard.writeText(text)
+      } catch (error) {
+        console.error('复制失败:', error)
+      }
     }
 
     const formatDate = (dateStr) => {
@@ -842,6 +534,8 @@ export default {
     return {
       searchQuery,
       filters,
+      loading,
+      filtersLoading,
       skillCategories,
       exerciseTypes,
       filteredExerciseTypes,
@@ -849,6 +543,10 @@ export default {
       currentPage,
       totalPages,
       total,
+      metadataDrafts,
+      metadataOriginals,
+      metadataErrors,
+      editingMetadata,
       goToPage,
       getExerciseTypeName,
       getSkillCategoryName,
@@ -864,35 +562,14 @@ export default {
       getExerciseMedia,
       getMediaRoleName,
       getMediaName,
-      getExerciseTypeKey,
-      isListenQa,
-      isListenSentenceTf,
-      isListenImageTrueFalse,
-      isListenImageMc,
-      isListenImageMatch,
-      isReadImageMatch,
-      isReadImageTrueFalse,
-      isReadDialogueMatch,
-      isReadParagraphComprehension,
-      isReadSentenceComprehensionChoice,
-      isReadSentenceTf,
-      isReadSentenceTranslation,
-      isReadWordGapFill,
-      isReadSentenceOrder,
-      isReadWordOrder,
-      isTranslateWordOrder,
-      isSpeakFollow,
-      isStrokeOrderWriting,
-      getTextValue,
-      formatBoolean,
-      getOptionLabel,
-      getOptionText,
-      getCorrectImageIndex,
-      getBlankOptions,
-      getBlankCorrectAnswer,
-      getShuffledPieces,
-      formatOrder,
-      formatDate
+      formatDate,
+      formatMetadata,
+      saveMetadata,
+      startEditMetadata,
+      cancelEditMetadata,
+      handleMediaError,
+      copyMetadata,
+      handleSearch
     }
   }
 }
@@ -922,65 +599,6 @@ export default {
   margin: 0;
   color: #666;
   font-size: 0.95rem;
-}
-
-.filter-section {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.filter-row {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-}
-
-.filter-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.filter-item label {
-  font-weight: 500;
-  color: #555;
-  white-space: nowrap;
-}
-
-.filter-select {
-  padding: 8px 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  min-width: 120px;
-  transition: border-color 0.3s;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: #66bb6a;
-}
-
-.search-box {
-  margin-top: 15px;
-}
-
-.search-input {
-  width: 100%;
-  padding: 12px 20px;
-  font-size: 1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  transition: border-color 0.3s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #66bb6a;
 }
 
 .stats-section {
@@ -1212,67 +830,10 @@ code {
   background: #f0f2f5; /* 让卡片在弹窗中更明显 */
 }
 
-/* 卡片样式还原 */
-.exercise-card {
-  background: white;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  background: linear-gradient(135deg, #f5f5f5 0%, #e8f5e9 100%);
-  border-bottom: 2px solid #e0e0e0;
-}
-
-.header-left,
-.header-right {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.type-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  background-color: #e1bee7;
-  color: #4a148c;
-}
-
-.card-body {
-  padding: 20px;
-}
+/* 卡片样式 - 基础样式由 ExerciseCard 组件提供 */
 
 .exercise-id {
   margin-bottom: 12px;
-}
-
-.exercise-prompt {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 15px;
-  line-height: 1.6;
-}
-
-.word-info {
-  background: #e8f5e9;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-
-.word-sub {
-  color: #2e7d32;
-  font-size: 0.9rem;
-  margin-top: 6px;
 }
 
 .exercise-meta {
@@ -1299,19 +860,7 @@ code {
   color: #333;
 }
 
-.info-label {
-  font-weight: 600;
-  color: #2e7d32;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-}
-
-.metadata-section {
-  background: #f9f9f9;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
+/* 已移至 ExerciseCard 组件的样式已删除 */
 
 .metadata-content {
   margin-top: 8px;
@@ -1524,18 +1073,58 @@ code {
 .media-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   margin-top: 8px;
+}
+
+.media-item-wrapper {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .media-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  background: white;
-  border-radius: 6px;
+  padding: 10px 12px;
   font-size: 0.9rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.media-preview-container {
+  padding: 10px;
+  background: #fafafa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.media-preview-img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.media-preview-audio {
+  width: 100%;
+  max-width: 300px;
+}
+
+.media-preview-video {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 6px;
+}
+
+.media-no-url {
+  padding: 10px;
+  color: #999;
+  font-size: 0.85rem;
+  text-align: center;
+  background: #fafafa;
 }
 
 .media-icon {
@@ -1545,7 +1134,7 @@ code {
 .media-name {
   font-weight: 500;
   color: #333;
-  max-width: 260px;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1554,11 +1143,12 @@ code {
 .media-role {
   font-weight: 600;
   color: #1565c0;
+  font-size: 0.85rem;
 }
 
 .media-type {
   color: #666;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   margin-left: auto;
 }
 

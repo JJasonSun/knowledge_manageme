@@ -2,24 +2,22 @@
   <div>
     <Header />
     <div class="container">
-      <div class="page-header">
-        <h2>视频资源管理</h2>
-        <div class="header-actions">
-          <div class="permission-info">
-            <small>💡 操作说明：只能编辑/删除自己创建的资源</small>
-          </div>
-          <button class="btn btn-add" @click="showCreateModal = true">+ 添加视频</button>
-        </div>
-      </div>
+      <PageHeader
+        icon="🎬"
+        title="视频资源管理"
+        subtitle="视频资源库"
+        variant="orange"
+        :showAddButton="true"
+        addButtonText="添加视频"
+        :showPermissionTip="true"
+        @add="showCreateModal = true"
+      />
       
-      <div class="search-box">
-        <input 
-          v-model="searchQuery" 
-          type="text" 
-          class="search-input"
-          placeholder="搜索视频资源..."
-        >
-      </div>
+      <SearchBar
+        v-model="searchQuery"
+        placeholder="搜索视频资源..."
+        variant="orange"
+      />
       
       <div class="placeholder-content">
         <div class="placeholder-icon">🎬</div>
@@ -51,11 +49,15 @@
 <script>
 import { ref } from 'vue'
 import Header from '../../components/Header.vue'
+import PageHeader from '../../components/PageHeader.vue'
+import SearchBar from '../../components/SearchBar.vue'
 
 export default {
   name: 'VideoList',
   components: {
-    Header
+    Header,
+    PageHeader,
+    SearchBar
   },
   setup() {
     const searchQuery = ref('')

@@ -2,26 +2,24 @@
   <div>
     <Header />
     <div class="container">
-      <div class="page-header">
-        <h2>汉字管理</h2>
-        <div class="header-actions">
-          <div class="permission-info">
-            <small>💡 操作说明：只能编辑/删除自己创建的资源</small>
-          </div>
-          <button class="btn btn-add" @click="showCreateModal = true">+ 添加汉字</button>
-        </div>
-      </div>
+      <PageHeader
+        icon="📝"
+        title="汉字管理"
+        subtitle="汉字基础知识库"
+        variant="blue"
+        :showAddButton="true"
+        addButtonText="添加汉字"
+        :showPermissionTip="true"
+        @add="showCreateModal = true"
+      />
       
-      <div class="search-box">
-        <input 
-          v-model="searchQuery" 
-          type="text" 
-          class="search-input"
-          placeholder="搜索汉字..."
-          @keyup.enter="handleSearch"
-        >
-        <button class="btn btn-primary" @click="handleSearch" :disabled="loading">搜索</button>
-      </div>
+      <SearchBar
+        v-model="searchQuery"
+        placeholder="搜索汉字..."
+        variant="blue"
+        :loading="loading"
+        @search="handleSearch"
+      />
       
       <table class="table" v-if="!loading && hanziList.length > 0">
         <thead>
@@ -196,12 +194,14 @@
 <script>
 import { computed, ref, onMounted } from 'vue'
 import Header from '../../components/Header.vue'
+import PageHeader from '../../components/PageHeader.vue'
+import SearchBar from '../../components/SearchBar.vue'
 import request from '../../utils/request'
 import { useAuthStore } from '../../stores/auth'
 
 export default {
   name: 'HanziList',
-  components: { Header },
+  components: { Header, PageHeader, SearchBar },
   setup() {
     const authStore = useAuthStore()
     const hanziList = ref([])
