@@ -65,11 +65,13 @@
 ### 后端配置与启动 (uv 推荐)
 
 1. 进入目录并安装依赖：
+
    ```bash
    cd backend
    uv sync
    ```
 2. 启动服务 (默认端口 8003)：
+
    ```bash
    uv run uvicorn app.main:app --reload --port 8003
    ```
@@ -110,21 +112,17 @@
 
 1.**错误**: `Failed to spawn: uvicorn` 或 `program not found`
 
-   -**解决方案**: 确保在 `backend` 目录下运行命令，并且已正确安装依赖
+- **解决方案**: 确保在 `backend` 目录下运行命令，并且已正确安装依赖
 
 ```bash
-
    cd backend
-
    uv sync  # 重新同步依赖
-
    uv run uvicorn app.main:app --reload --port 8003
-
 ```
 
 2.**错误**: 数据库连接失败
 
-   -**解决方案**: 检查 `backend/.env` 文件中的数据库配置
+- **解决方案**: 检查 `backend/.env` 文件中的数据库配置
 
 - 确保 MySQL 服务正在运行
 
@@ -133,35 +131,29 @@
    -**解决方案**: 更换端口或停止占用端口的进程
 
 ```bash
-
    uv run uvicorn app.main:app --reload --port 8004  # 使用其他端口
-
 ```
 
 ### 前端启动问题
 
 1.**错误**: `npm install` 失败
 
-   -**解决方案**: 清除缓存后重新安装
+- **解决方案**: 清除缓存后重新安装
 
 ```bash
-
    npm cache clean --force
-
    npm install
-
 ```
 
 2.**错误**: API 请求失败
 
-   -**解决方案**: 确保后端服务已启动并运行在正确端口
-
+- **解决方案**: 确保后端服务已启动并运行在正确端口
 - 检查 `frontend/vite.config.js` 中的代理配置
 
 ## 测试账号
 
--**管理员**: `admin` / `123456` （可管理所有资源）
+- **管理员**: `admin` / `123456` （可管理所有资源）
 
--**老师1**: `teacher1` / `123456` （只能管理自己创建的资源）
+- **老师1**: `teacher1` / `123456` （只能管理自己创建的资源）
 
--**老师2**: `teacher2` / `123456` （只能管理自己创建的资源）
+- **老师2**: `teacher2` / `123456` （只能管理自己创建的资源）
