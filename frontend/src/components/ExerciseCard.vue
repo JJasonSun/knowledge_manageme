@@ -185,7 +185,7 @@ export default {
   transition: transform 0.2s;
 }
 
-:deep(.id-details[open]) > :deep(.id-summary)::before {
+:deep(.id-details[open] .id-summary::before) {
   transform: rotate(90deg);
 }
 
@@ -268,7 +268,7 @@ export default {
   flex-shrink: 0;
 }
 
-:deep(.meta-details[open]) > :deep(.meta-summary)::before {
+:deep(.meta-details[open] .meta-summary::before) {
   transform: rotate(90deg);
 }
 
